@@ -262,6 +262,26 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 
 .intake-sel { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--border2); font-size: 12px; font-family: inherit; color: var(--text); background: var(--bg); cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9a94'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px; }
 .intake-sel:focus { outline: none; border-color: var(--purple); }
 
+/* Consolidated workflow result */
+.cons-card { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 12px; }
+.cons-head { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.cons-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; opacity: 0.7; }
+.cons-verdict { font-size: 22px; font-weight: 800; margin-bottom: 5px; }
+.cons-sub { font-size: 13px; line-height: 1.65; opacity: 0.85; }
+.cons-pipeline-wrap { padding: 14px 18px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.cons-pipeline-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+.cons-pipeline { display: flex; align-items: stretch; flex-wrap: wrap; gap: 4px; }
+.cons-stage { flex: 1; min-width: 80px; border: 1px solid; border-radius: 9px; padding: 10px 10px; display: flex; flex-direction: column; gap: 3px; }
+.cons-stage-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; margin-bottom: 4px; flex-shrink: 0; }
+.cons-stage-name { font-size: 11px; font-weight: 700; line-height: 1.35; }
+.cons-stage-tier { font-size: 10px; font-weight: 600; opacity: 0.75; margin-top: 2px; }
+.cons-arrow { display: flex; align-items: center; font-size: 16px; padding: 0 2px; flex-shrink: 0; align-self: center; }
+.cons-risks-wrap { padding: 12px 18px; background: var(--bg2); }
+.cons-risk { display: flex; gap: 10px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 12px; line-height: 1.5; }
+.cons-risk:first-child { border-top: none; }
+.cons-risk-stage { font-weight: 700; color: var(--text); flex: 0 0 120px; }
+.cons-risk-text { color: var(--text2); }
+
 /* Carousel */
 .da-carousel { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
 .da-carousel-nav { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg2); border-bottom: 1px solid var(--border); }
@@ -1509,11 +1529,12 @@ function renderDAResult(result) {
       <div class="da-carousel-body">${cardsHtml}</div>
     </div>
     <div class="da-validate-row">
-      <button class="da-validate-btn" id="da-validate-btn" onclick="loadAllIntoFramework()" disabled>
-        I have reviewed all stages — load into framework
+      <button class="da-validate-btn" id="da-validate-btn" onclick="showConsolidatedResult()" disabled>
+        I have reviewed all stages — show workflow recommendation
       </button>
       <span class="da-validate-hint" id="da-validate-hint">Review all ${total} stages to enable</span>
-    </div>`;
+    </div>
+    <div id="da-consolidated" style="display:none"></div>`;
 
   resultEl.style.display = 'block';
   daSeenCards.add(0);
@@ -1549,49 +1570,78 @@ function updateDaNav() {
   }
 }
 
-function loadAllIntoFramework() {
+function showConsolidatedResult() {
   if (!daStages.length) return;
 
-  const consumerMap = {
-    sensitivity:'c1', complexity:'c2', latency:'c3',
-    volume:'c4', residency:'c5', trainingData:'c6',
-    cost:'c7', mlCapacity:'c8', governance:'c9'
+  const TIER_COLORS = {
+    'SLM':               { bg: 'var(--pastel-green)',  border: 'var(--pastel-green-border)',  text: 'var(--pastel-green-text)',  bar: 'var(--green-bar)'  },
+    'Distilled frontier':{ bg: 'var(--pastel-amber)',  border: 'var(--pastel-amber-border)',  text: 'var(--pastel-amber-text)',  bar: 'var(--amber-bar)'  },
+    'Frontier':          { bg: 'var(--pastel-purple)', border: 'var(--pastel-purple-border)', text: 'var(--pastel-purple-text)', bar: 'var(--purple-bar)' },
+    'Hybrid':            { bg: 'var(--pastel-teal)',   border: 'var(--pastel-teal-border)',   text: 'var(--pastel-teal-text)',   bar: '#1D9E75'           }
   };
-  const codingMap = {
-    sensitivity:'k1', complexity:'k2', latency:'k3',
-    volume:'k4', residency:'k5', trainingData:'k6',
-    cost:'k7', mlCapacity:'k8', governance:'k9'
-  };
-  const map = dom === 'k' ? codingMap : consumerMap;
 
-  // Average all stage dimension scores
-  const dimKeys = Object.keys(consumerMap);
-  const averaged = {};
-  dimKeys.forEach(k => {
-    const vals = daStages.map(s => s.dimensions[k] || 3);
-    averaged[k] = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+  // Determine each stage's tier cleanly
+  const stageTiers = daStages.map(s => {
+    if (s.verdict.includes('SLM')) return 'SLM';
+    if (s.verdict.includes('Distilled')) return 'Distilled frontier';
+    if (s.verdict.includes('Hybrid')) return 'Hybrid';
+    return 'Frontier';
   });
 
-  step = 0;
-  document.getElementById('result-area').innerHTML = '';
-  renderProg();
-  renderPanels();
+  // Determine if the workflow as a whole is a hybrid
+  const uniqueTiers = [...new Set(stageTiers)];
+  const isWorkflowHybrid = uniqueTiers.length > 1;
 
-  setTimeout(() => {
-    Object.entries(map).forEach(([dimKey, sliderId]) => {
-      const val = averaged[dimKey] || 3;
-      const slider = document.getElementById(sliderId);
-      const display = document.getElementById('qv-' + sliderId);
-      if (slider) slider.value = val;
-      if (display) display.textContent = val;
-    });
-    document.querySelector('.ap-framework').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--pastel-green);color:var(--pastel-green-text);border:1px solid var(--pastel-green-border);padding:10px 22px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,0.1);`;
-    toast.textContent = 'All stages loaded. Review sliders and click See result.';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3500);
-  }, 80);
+  // Overall verdict: if all stages agree use that tier, otherwise Hybrid
+  const overallTier = isWorkflowHybrid ? 'Hybrid pipeline' : stageTiers[0];
+  const overallColors = isWorkflowHybrid ? TIER_COLORS['Hybrid'] : (TIER_COLORS[stageTiers[0]] || TIER_COLORS['Distilled frontier']);
+
+  // Build stage pipeline row
+  const pipelineHtml = daStages.map((stage, i) => {
+    const tier = stageTiers[i];
+    const c = TIER_COLORS[tier] || TIER_COLORS['Distilled frontier'];
+    return `
+      <div class="cons-stage" style="background:${c.bg};border-color:${c.border};">
+        <div class="cons-stage-num" style="background:${c.text};color:${c.bg};">${i+1}</div>
+        <div class="cons-stage-name" style="color:${c.text};">${stage.stageName}</div>
+        <div class="cons-stage-tier" style="color:${c.text};">${tier}</div>
+      </div>
+      ${i < daStages.length-1 ? `<div class="cons-arrow" style="color:var(--text3);">&#8594;</div>` : ''}`;
+  }).join('');
+
+  // Key risks summary
+  const risksHtml = daStages
+    .filter(s => s.keyRisk)
+    .map((s,i) => `
+      <div class="cons-risk">
+        <span class="cons-risk-stage">${s.stageName}</span>
+        <span class="cons-risk-text">${s.keyRisk}</span>
+      </div>`).join('');
+
+  const el = document.getElementById('da-consolidated');
+  el.innerHTML = `
+    <div class="cons-card">
+      <div class="cons-head" style="background:${overallColors.bg};border-color:${overallColors.border};">
+        <div class="cons-eyebrow" style="color:${overallColors.text};">Workflow recommendation</div>
+        <div class="cons-verdict" style="color:${overallColors.text};">${overallTier}</div>
+        <div class="cons-sub" style="color:${overallColors.text};">
+          ${isWorkflowHybrid
+            ? 'This workflow spans multiple model tiers. Different stages require different levels of capability — a single model tier cannot handle all stages appropriately.'
+            : 'All stages in this workflow are best served by the same model tier.'}
+        </div>
+      </div>
+      <div class="cons-pipeline-wrap">
+        <div class="cons-pipeline-label">Stage-by-stage pipeline</div>
+        <div class="cons-pipeline">${pipelineHtml}</div>
+      </div>
+      ${risksHtml ? `
+        <div class="cons-risks-wrap">
+          <div class="cons-pipeline-label">Key risks by stage</div>
+          ${risksHtml}
+        </div>` : ''}
+    </div>`;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 </body>

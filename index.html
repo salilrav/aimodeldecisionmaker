@@ -262,6 +262,26 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 
 .intake-sel { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--border2); font-size: 12px; font-family: inherit; color: var(--text); background: var(--bg); cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9a94'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px; }
 .intake-sel:focus { outline: none; border-color: var(--purple); }
 
+/* Carousel */
+.da-carousel { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+.da-carousel-nav { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+.da-nav-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); background: var(--bg); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); transition: all 0.15s; flex-shrink: 0; }
+.da-nav-btn:hover:not(:disabled) { background: var(--pastel-purple); border-color: var(--pastel-purple-border); color: var(--pastel-purple-text); }
+.da-nav-btn:disabled { opacity: 0.25; cursor: default; }
+.da-carousel-counter { text-align: center; flex: 1; }
+.da-carousel-counter span { font-size: 12px; font-weight: 700; color: var(--text2); display: block; margin-bottom: 6px; }
+.da-dots { display: flex; gap: 5px; justify-content: center; }
+.da-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: all 0.2s; }
+.da-dot-active { background: var(--purple); transform: scale(1.2); }
+.da-carousel-body { background: var(--bg); }
+.da-carousel-card { }
+
+.da-validate-row { display: flex; flex-direction: column; gap: 5px; align-items: center; margin-top: 4px; }
+.da-validate-btn { width: 100%; padding: 11px; border-radius: 9px; background: var(--purple); color: #fff; border: none; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+.da-validate-btn:hover:not(:disabled) { opacity: 0.88; }
+.da-validate-btn:disabled { background: var(--bg3); color: var(--text3); cursor: default; }
+.da-validate-hint { font-size: 11px; color: var(--text3); font-style: italic; }
+
 /* Document analyser inside panel */
 .da-upload-area { border: 2px dashed var(--border2); border-radius: 10px; padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--bg2); }
 .da-upload-area:hover { border-color: var(--purple); background: var(--pastel-purple); }
@@ -1426,27 +1446,31 @@ Respond ONLY with a valid JSON object. No preamble, no markdown fences.
   }
 }
 
+let daStages = [], daCurrentCard = 0, daSeenCards = new Set();
+
 function renderDAResult(result) {
   const resultEl = document.getElementById('da-result');
+  daStages = result.stages;
+  daCurrentCard = 0;
+  daSeenCards = new Set();
 
   const dimNames = ['Sensitivity','Complexity','Latency','Volume','Residency','Training data','Cost','ML capacity','Governance'];
   const dimKeys = ['sensitivity','complexity','latency','volume','residency','trainingData','cost','mlCapacity','governance'];
+  const total = daStages.length;
 
-  const stagesHtml = result.stages.map((stage, i) => {
+  const cardsHtml = daStages.map((stage, i) => {
     const tierKey = stage.verdict.includes('SLM') ? 'SLM'
       : stage.verdict.includes('Distilled') ? 'Distilled frontier'
       : stage.verdict.includes('Hybrid') ? 'Hybrid'
       : 'Frontier';
     const style = TIER_STYLE[tierKey] || TIER_STYLE['Distilled frontier'];
-
     const dimPills = dimNames.map((n,j) => {
       const val = stage.dimensions[dimKeys[j]] || 3;
       const lbl = val <= 2 ? 'Low' : val <= 3 ? 'Mid' : 'High';
       return `<span class="da-dim-pill">${n}: ${lbl} (${val})</span>`;
     }).join('');
-
     return `
-      <div class="da-stage-card">
+      <div class="da-carousel-card" id="dacard-${i}" style="display:${i===0?'block':'none'}">
         <div class="da-stage-head ${style.head}">
           <div class="da-stage-num">${i+1}</div>
           <div class="da-stage-meta">
@@ -1468,8 +1492,103 @@ function renderDAResult(result) {
       <div class="da-summary-text">${result.documentSummary}</div>
       ${result.overallContext ? `<div class="da-summary-text" style="margin-top:8px;opacity:0.85;">${result.overallContext}</div>` : ''}
     </div>
-    ${stagesHtml}`;
+    <div class="da-carousel">
+      <div class="da-carousel-nav">
+        <button class="da-nav-btn" id="da-prev" onclick="daNav(-1)" disabled>&#8592;</button>
+        <div class="da-carousel-counter">
+          <span id="da-counter">Stage 1 of ${total}</span>
+          <div class="da-dots" id="da-dots">
+            ${daStages.map((_,i) => `<span class="da-dot${i===0?' da-dot-active':''}" id="dadot-${i}"></span>`).join('')}
+          </div>
+        </div>
+        <button class="da-nav-btn" id="da-next" onclick="daNav(1)" ${total===1?'disabled':''}>&#8594;</button>
+      </div>
+      <div class="da-carousel-body">${cardsHtml}</div>
+    </div>
+    <div class="da-validate-row">
+      <button class="da-validate-btn" id="da-validate-btn" onclick="loadAllIntoFramework()" disabled>
+        I have reviewed all stages — load into framework
+      </button>
+      <span class="da-validate-hint" id="da-validate-hint">Review all ${total} stages to enable</span>
+    </div>`;
+
   resultEl.style.display = 'block';
+  daSeenCards.add(0);
+  updateDaNav();
+}
+
+function daNav(dir) {
+  const total = daStages.length;
+  document.getElementById('dacard-' + daCurrentCard).style.display = 'none';
+  document.getElementById('dadot-' + daCurrentCard).classList.remove('da-dot-active');
+  daCurrentCard = Math.max(0, Math.min(total - 1, daCurrentCard + dir));
+  document.getElementById('dacard-' + daCurrentCard).style.display = 'block';
+  document.getElementById('dadot-' + daCurrentCard).classList.add('da-dot-active');
+  daSeenCards.add(daCurrentCard);
+  updateDaNav();
+}
+
+function updateDaNav() {
+  const total = daStages.length;
+  document.getElementById('da-counter').textContent = `Stage ${daCurrentCard + 1} of ${total}`;
+  document.getElementById('da-prev').disabled = daCurrentCard === 0;
+  document.getElementById('da-next').disabled = daCurrentCard === total - 1;
+  const allSeen = daSeenCards.size >= total;
+  const btn = document.getElementById('da-validate-btn');
+  const hint = document.getElementById('da-validate-hint');
+  btn.disabled = !allSeen;
+  if (allSeen) {
+    hint.textContent = 'All stages reviewed. Ready to load.';
+    hint.style.color = 'var(--pastel-green-text)';
+  } else {
+    const remaining = total - daSeenCards.size;
+    hint.textContent = `${remaining} more stage${remaining > 1 ? 's' : ''} to review`;
+  }
+}
+
+function loadAllIntoFramework() {
+  if (!daStages.length) return;
+
+  const consumerMap = {
+    sensitivity:'c1', complexity:'c2', latency:'c3',
+    volume:'c4', residency:'c5', trainingData:'c6',
+    cost:'c7', mlCapacity:'c8', governance:'c9'
+  };
+  const codingMap = {
+    sensitivity:'k1', complexity:'k2', latency:'k3',
+    volume:'k4', residency:'k5', trainingData:'k6',
+    cost:'k7', mlCapacity:'k8', governance:'k9'
+  };
+  const map = dom === 'k' ? codingMap : consumerMap;
+
+  // Average all stage dimension scores
+  const dimKeys = Object.keys(consumerMap);
+  const averaged = {};
+  dimKeys.forEach(k => {
+    const vals = daStages.map(s => s.dimensions[k] || 3);
+    averaged[k] = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+  });
+
+  step = 0;
+  document.getElementById('result-area').innerHTML = '';
+  renderProg();
+  renderPanels();
+
+  setTimeout(() => {
+    Object.entries(map).forEach(([dimKey, sliderId]) => {
+      const val = averaged[dimKey] || 3;
+      const slider = document.getElementById(sliderId);
+      const display = document.getElementById('qv-' + sliderId);
+      if (slider) slider.value = val;
+      if (display) display.textContent = val;
+    });
+    document.querySelector('.ap-framework').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--pastel-green);color:var(--pastel-green-text);border:1px solid var(--pastel-green-border);padding:10px 22px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,0.1);`;
+    toast.textContent = 'All stages loaded. Review sliders and click See result.';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }, 80);
 }
 </script>
 </body>

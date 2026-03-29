@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Model Selection and Decision Framework for Banks</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Pastels */
+  --pastel-green: #d6efc8; --pastel-green-text: #2a5a0a; --pastel-green-border: #a8d48a;
+  --pastel-amber: #fce4b0; --pastel-amber-text: #7a430a; --pastel-amber-border: #f0c060;
+  --pastel-purple: #e0dcff; --pastel-purple-text: #3a3090; --pastel-purple-border: #b8b0f0;
+  --pastel-teal: #c8eee4; --pastel-teal-text: #0a5040; --pastel-teal-border: #80d0bc;
+  --pastel-coral: #ffd8cc; --pastel-coral-text: #8a2810; --pastel-coral-border: #f0a888;
+  --pastel-blue: #cce4f8; --pastel-blue-text: #0a3870; --pastel-blue-border: #88c0f0;
+
+  /* Core */
+  --bg: #fafaf8; --bg2: #f2f0eb; --bg3: #e8e5de;
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14);
+  --text: #1a1a16; --text2: #52524e; --text3: #94948e;
+
+  /* Semantic */
+  --green: #2a5a0a; --green-bg: #d6efc8; --green-bar: #5aa020;
+  --amber: #7a430a; --amber-bg: #fce4b0; --amber-bar: #c08010;
+  --purple: #3a3090; --purple-bg: #e0dcff; --purple-bar: #6860d0;
+  --warn-bg: #fce4b0; --warn-text: #7a430a; --warn-b: #c08010;
+  --danger-bg: #ffd0c8; --danger-text: #8a2810; --danger-b: #e06040;
+  --success-bg: #d6efc8; --success-text: #2a5a0a; --success-b: #5aa020;
+
+  /* Hero accent */
+  --hero-bg: #e0dcff;
+  --hero-border: #b8b0f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pastel-green: #1a3808; --pastel-green-text: #a0d870; --pastel-green-border: #406020;
+    --pastel-amber: #3a2004; --pastel-amber-text: #f0b840; --pastel-amber-border: #804010;
+    --pastel-purple: #201c58; --pastel-purple-text: #c0b8f8; --pastel-purple-border: #504898;
+    --pastel-teal: #083028; --pastel-teal-text: #70d0b8; --pastel-teal-border: #206050;
+    --bg: #181814; --bg2: #222220; --bg3: #2c2c28;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+    --text: #e8e6de; --text2: #a0a098; --text3: #646460;
+    --green: #90d060; --green-bg: #1a3808; --green-bar: #5a9820;
+    --amber: #f0b840; --amber-bg: #3a2004; --amber-bar: #b07810;
+    --purple: #b0a8f0; --purple-bg: #201c58; --purple-bar: #6058c8;
+    --warn-bg: #3a2004; --warn-text: #f0b840; --warn-b: #b07810;
+    --danger-bg: #3a1008; --danger-text: #f08070; --danger-b: #c04030;
+    --success-bg: #1a3808; --success-text: #90d060; --success-b: #5a9820;
+    --hero-bg: #201c58; --hero-border: #504898;
+  }
+}
+
+html { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.55; }
+body { max-width: 1060px; margin: 0 auto; padding: 28px 16px 64px; }
+
+/* Hero */
+.hero { background: var(--hero-bg); border: 1px solid var(--hero-border); border-radius: 14px; padding: 22px 28px; margin-bottom: 12px; text-align: center; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--purple); margin-bottom: 6px; }
+.title { font-size: 24px; font-weight: 800; line-height: 1.2; color: var(--text); margin-bottom: 4px; }
+.hero-sub { font-size: 13px; color: var(--text2); }
+
+/* Info strip */
+.info-strip { background: var(--pastel-teal); border: 1px solid var(--pastel-teal-border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+.info-strip-tabs { display: flex; align-items: center; gap: 4px; padding: 10px 14px 0; }
+.ist { padding: 6px 12px; border-radius: 8px 8px 0 0; border: 1px solid transparent; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; color: var(--pastel-teal-text); background: transparent; opacity: 0.55; border-bottom: none; }
+.ist:hover { opacity: 0.8; background: rgba(255,255,255,0.25); }
+.ist.on { opacity: 1; background: rgba(255,255,255,0.55); border-color: rgba(255,255,255,0.7); color: var(--pastel-teal-text); font-weight: 700; }
+.ist-close { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 14px; color: var(--pastel-teal-text); opacity: 0.4; padding: 4px 8px; border-radius: 6px; }
+.ist-close:hover { opacity: 0.8; background: rgba(255,255,255,0.25); }
+.info-strip-body { padding: 12px 18px 16px; }
+.strip-moments { display: flex; flex-direction: column; gap: 8px; }
+.strip-moment { display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,0.55); border-radius: 9px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.7); }
+.sm-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--pastel-teal-text); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-top: 1px; }
+.strip-moment div { font-size: 13px; color: var(--pastel-teal-text); line-height: 1.65; }
+.strip-moment strong { color: var(--pastel-teal-text); font-weight: 700; }
+.strip-text { font-size: 13px; color: var(--pastel-teal-text); line-height: 1.7; }
+.strip-link { color: var(--pastel-teal-text); font-weight: 700; }
+
+/* Tier legend bar */
+.tier-legend-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; }
+.tlb-label { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-right: 4px; }
+.tlb-pill { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid; cursor: default; }
+.tlb-g { background: var(--pastel-green); color: var(--pastel-green-text); border-color: var(--pastel-green-border); }
+.tlb-a { background: var(--pastel-amber); color: var(--pastel-amber-text); border-color: var(--pastel-amber-border); }
+.tlb-p { background: var(--pastel-purple); color: var(--pastel-purple-text); border-color: var(--pastel-purple-border); }
+.tlb-t { background: var(--pastel-teal); color: var(--pastel-teal-text); border-color: var(--pastel-teal-border); }
+.tlb-more { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--purple); text-decoration: none; cursor: pointer; }
+.tlb-more:hover { text-decoration: underline; }
+
+/* Tier detail panel */
+.tier-detail-panel { margin-bottom: 12px; }
+.tdp-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+.trc { border-radius: 10px; padding: 12px 14px; border: 1px solid; display: flex; flex-direction: column; gap: 4px; }
+.trc-g { background: var(--pastel-green); border-color: var(--pastel-green-border); }
+.trc-a { background: var(--pastel-amber); border-color: var(--pastel-amber-border); }
+.trc-p { background: var(--pastel-purple); border-color: var(--pastel-purple-border); }
+.trc-t { background: var(--pastel-teal); border-color: var(--pastel-teal-border); }
+.trc-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.05em; display: inline-block; margin-bottom: 4px; }
+.trc-g .trc-badge { background: rgba(42,90,10,0.15); color: var(--pastel-green-text); border: 1px solid var(--pastel-green-border); }
+.trc-a .trc-badge { background: rgba(122,67,10,0.15); color: var(--pastel-amber-text); border: 1px solid var(--pastel-amber-border); }
+.trc-p .trc-badge { background: rgba(58,48,144,0.15); color: var(--pastel-purple-text); border: 1px solid var(--pastel-purple-border); }
+.trc-t .trc-badge { background: rgba(10,80,64,0.15); color: var(--pastel-teal-text); border: 1px solid var(--pastel-teal-border); }
+.trc strong { font-size: 12px; font-weight: 700; }
+.trc-g strong { color: var(--pastel-green-text); }
+.trc-a strong { color: var(--pastel-amber-text); }
+.trc-p strong { color: var(--pastel-purple-text); }
+.trc-t strong { color: var(--pastel-teal-text); }
+.trc span:last-child { font-size: 11px; line-height: 1.55; opacity: 0.85; }
+.trc-g span:last-child { color: var(--pastel-green-text); }
+.trc-a span:last-child { color: var(--pastel-amber-text); }
+.trc-p span:last-child { color: var(--pastel-purple-text); }
+.trc-t span:last-child { color: var(--pastel-teal-text); }
+
+/* Action row — two panels side by side */
+.action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; align-items: start; }
+.action-panel { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--bg); }
+.ap-header { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg2); }
+.ap-title { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.ap-ai-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 5px; background: var(--pastel-purple); color: var(--pastel-purple-text); border: 1px solid var(--pastel-purple-border); letter-spacing: 0.06em; }
+.ap-desc { font-size: 13px; color: var(--text2); line-height: 1.65; padding: 12px 18px 0; }
+.ap-framework .dtabs { flex-shrink: 0; }
+.ap-framework .progress-row { padding: 10px 18px 0; margin-bottom: 0; }
+.ap-framework #panels { padding: 0 18px; }
+.ap-framework #result-area { padding: 0 18px 18px; }
+.ap-analyser .da-upload-area { margin: 12px 18px 0; }
+.ap-analyser .da-filename { margin: 8px 18px 0; }
+.ap-analyser .da-domain-row { padding: 12px 18px 0; }
+.ap-analyser .da-run-btn { margin: 12px 18px 0; width: calc(100% - 36px); }
+.ap-analyser #da-status { margin: 8px 18px 0; }
+.ap-analyser #da-result { padding: 0 18px 18px; }
+
+/* Domain tabs inside panel header */
+.dtabs { display: flex; gap: 6px; }
+.dt { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border2); font-size: 12px; font-weight: 600; color: var(--text2); background: var(--bg); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.dt:hover { background: var(--bg3); }
+.dt.on { background: var(--pastel-purple); border-color: var(--pastel-purple-border); color: var(--pastel-purple-text); }
+
+/* Progress */
+.progress-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding-top: 12px; }
+.prog-step { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.prog-dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text3); background: var(--bg2); transition: all 0.2s; }
+.prog-dot.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+.prog-dot.done { background: var(--pastel-green); color: var(--pastel-green-text); border-color: var(--pastel-green-border); }
+.prog-label { font-size: 11px; color: var(--text3); font-weight: 600; }
+.prog-label.active { color: var(--purple); font-weight: 700; }
+.prog-line { flex: 1; height: 1px; background: var(--border2); }
+
+/* Section panel */
+.section-panel { display: none; }
+.section-panel.active { display: block; }
+.section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+
+/* Question cards */
+.qs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.qcard { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; border-left: 4px solid var(--pastel-purple-border); }
+.qcard:nth-child(2) { border-left-color: var(--pastel-teal-border); }
+.qcard:nth-child(3) { border-left-color: var(--pastel-amber-border); }
+.qnum { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 3px; }
+.qtop { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.qlabel { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35; flex: 1; }
+.qval { font-size: 22px; font-weight: 800; flex-shrink: 0; min-width: 28px; text-align: right; color: var(--purple); }
+.weight-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 5px; margin-bottom: 7px; letter-spacing: 0.05em; border: 1px solid; }
+.wh { background: var(--pastel-coral); color: var(--pastel-coral-text); border-color: var(--pastel-coral-border); }
+.wm { background: var(--pastel-amber); color: var(--pastel-amber-text); border-color: var(--pastel-amber-border); }
+.wl { background: var(--pastel-green); color: var(--pastel-green-text); border-color: var(--pastel-green-border); }
+input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: var(--border2); border-radius: 2px; outline: none; margin-bottom: 6px; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--purple); border: 2.5px solid var(--bg); cursor: pointer; }
+input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--purple); border: 2.5px solid var(--bg); cursor: pointer; }
+.qscale { display: flex; justify-content: space-between; gap: 8px; }
+.qlo, .qhi { font-size: 10px; color: var(--text3); line-height: 1.4; max-width: 45%; }
+.qhi { text-align: right; }
+.qdomain-note { font-size: 11px; color: var(--text3); margin-top: 6px; font-style: italic; border-top: 1px solid var(--border); padding-top: 5px; }
+
+/* Nav buttons */
+.nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.nav-btn { padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border2); font-size: 13px; font-weight: 600; color: var(--text); background: var(--bg2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.nav-btn:hover { background: var(--bg3); }
+.nav-btn.primary { background: var(--purple); color: #fff; border-color: var(--purple); }
+.nav-btn.primary:hover { opacity: 0.88; }
+.nav-btn:disabled { opacity: 0.3; cursor: default; }
+.nav-info { font-size: 12px; color: var(--text3); font-weight: 600; }
+
+/* Result */
+.result-wrap { animation: fadeIn 0.3s ease; margin-top: 12px; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.result-card { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+.rhead { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.rhead.rh-g { background: var(--pastel-green); }
+.rhead.rh-a { background: var(--pastel-amber); }
+.rhead.rh-p { background: var(--pastel-purple); }
+.rhead.rh-t { background: var(--pastel-teal); }
+.reyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; opacity: 0.7; }
+.rverdict { font-size: 22px; font-weight: 800; margin-bottom: 3px; }
+.rverdict.cg,.reyebrow.cg,.rsub.cg { color: var(--pastel-green-text); }
+.rverdict.ca,.reyebrow.ca,.rsub.ca { color: var(--pastel-amber-text); }
+.rverdict.cp,.reyebrow.cp,.rsub.cp { color: var(--pastel-purple-text); }
+.rverdict.ct,.reyebrow.ct,.rsub.ct { color: var(--pastel-teal-text); }
+.rsub { font-size: 12px; opacity: 0.75; }
+.tgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tc { padding: 12px 12px; border-right: 1px solid var(--border); border-top: 1px solid var(--border); background: var(--bg); }
+.tc:last-child { border-right: none; }
+.tc.best-g { background: var(--pastel-green); }
+.tc.best-a { background: var(--pastel-amber); }
+.tc.best-p { background: var(--pastel-purple); }
+.tc.best-t { background: var(--pastel-teal); }
+.wbadge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 5px; margin-bottom: 4px; border: 1px solid; }
+.wbadge-g { background: rgba(42,90,10,0.12); color: var(--pastel-green-text); border-color: var(--pastel-green-border); }
+.wbadge-a { background: rgba(122,67,10,0.12); color: var(--pastel-amber-text); border-color: var(--pastel-amber-border); }
+.wbadge-p { background: rgba(58,48,144,0.12); color: var(--pastel-purple-text); border-color: var(--pastel-purple-border); }
+.wbadge-t { background: rgba(10,80,64,0.12); color: var(--pastel-teal-text); border-color: var(--pastel-teal-border); }
+.tname { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
+.tscore { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+.tscore.cg { color: var(--green); } .tscore.ca { color: var(--amber); } .tscore.cp { color: var(--purple); } .tscore.ct { color: var(--pastel-teal-text); }
+.tbarwrap { height: 3px; background: var(--border2); border-radius: 2px; margin-bottom: 6px; }
+.tbar { height: 3px; border-radius: 2px; transition: width 0.4s ease; }
+.tbar.bg { background: var(--green-bar); } .tbar.ba { background: var(--amber-bar); } .tbar.bp { background: var(--purple-bar); } .tbar.bt { background: #1D9E75; }
+.tuses { font-size: 10px; color: var(--text3); line-height: 1.5; }
+.breakdown { border-top: 1px solid var(--border); }
+.bk-toggle { width: 100%; padding: 9px 16px; background: var(--bg2); border: none; font-family: inherit; font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+.bk-toggle:hover { background: var(--bg3); }
+.bk-body { display: none; padding: 2px 16px 12px; background: var(--bg); }
+.bk-body.open { display: block; }
+.bk-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-top: 1px solid var(--border); }
+.bk-row:first-child { border-top: none; }
+.bk-dim { font-size: 11px; color: var(--text2); flex: 0 0 140px; }
+.bk-bar-wrap { flex: 1; height: 3px; background: var(--border2); border-radius: 2px; }
+.bk-bar { height: 3px; border-radius: 2px; }
+.bk-num { font-size: 11px; font-weight: 700; color: var(--text2); min-width: 22px; text-align: right; }
+.rat { padding: 12px 16px; background: var(--bg2); border-top: 1px solid var(--border); }
+.ratlabel { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+.rattext { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.alrt { padding: 10px 16px; font-size: 12px; line-height: 1.6; color: var(--text2); border-top: 1px solid var(--border); }
+.alrt.warn { background: var(--warn-bg); } .alrt.danger { background: var(--danger-bg); }
+.alrth { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+.alrt.warn .alrth { color: var(--warn-text); } .alrt.danger .alrth { color: var(--danger-text); }
+.restart-btn { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border2); font-size: 13px; font-weight: 600; color: var(--text2); background: var(--bg2); cursor: pointer; font-family: inherit; margin-top: 4px; }
+.restart-btn:hover { background: var(--bg3); }
+.summary-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.chip { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--bg2); border: 1px solid var(--border2); color: var(--text2); font-weight: 600; }
+.pipeline-stages { padding: 12px 16px 14px; border-top: 1px solid var(--border); background: var(--bg); }
+.pipeline-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+.pipeline-row { display: flex; gap: 0; align-items: stretch; }
+.pipeline-stage { flex: 1; border-radius: 0; border: 1px solid var(--border); padding: 10px 12px; background: var(--bg2); }
+.pipeline-stage:first-child { border-radius: 8px 0 0 8px; }
+.pipeline-stage:last-child { border-radius: 0 8px 8px 0; }
+.pipeline-stage + .pipeline-stage { border-left: none; }
+.ps-step { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 3px; }
+.ps-tier { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.ps-tier-g { color: var(--pastel-green-text); } .ps-tier-a { color: var(--pastel-amber-text); } .ps-tier-p { color: var(--pastel-purple-text); } .ps-tier-t { color: var(--pastel-teal-text); }
+.ps-what { font-size: 10px; color: var(--text2); line-height: 1.45; }
+
+/* Intake form */
+.intake-form { padding: 12px 18px 10px; border-bottom: 1px solid var(--border); }
+.intake-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.intake-why { font-size: 10px; font-weight: 400; color: var(--text3); text-transform: none; letter-spacing: 0; font-style: italic; }
+.intake-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.intake-item { display: flex; flex-direction: column; gap: 4px; }
+.intake-q { font-size: 11px; font-weight: 600; color: var(--text2); line-height: 1.4; }
+.intake-sel { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--border2); font-size: 12px; font-family: inherit; color: var(--text); background: var(--bg); cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9a94'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px; }
+.intake-sel:focus { outline: none; border-color: var(--purple); }
+
+/* Document analyser inside panel */
+.da-upload-area { border: 2px dashed var(--border2); border-radius: 10px; padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--bg2); }
+.da-upload-area:hover { border-color: var(--purple); background: var(--pastel-purple); }
+.da-upload-icon { font-size: 24px; margin-bottom: 6px; }
+.da-upload-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.da-upload-hint { font-size: 11px; color: var(--text3); }
+.da-filename { padding: 7px 12px; background: var(--pastel-green); border: 1px solid var(--pastel-green-border); border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--pastel-green-text); }
+.da-domain-row { }
+.da-domain-label { font-size: 11px; font-weight: 700; color: var(--text2); letter-spacing: 0.04em; text-transform: uppercase; }
+.da-dt { padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border2); font-size: 12px; font-weight: 600; color: var(--text2); background: var(--bg2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.da-dt:hover { background: var(--bg3); }
+.da-dt.on { background: var(--pastel-purple); border-color: var(--pastel-purple-border); color: var(--pastel-purple-text); }
+.da-run-btn { display: block; padding: 11px; border-radius: 9px; background: var(--purple); color: #fff; border: none; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+.da-run-btn:hover { opacity: 0.88; }
+.da-run-btn:disabled { opacity: 0.35; cursor: default; }
+.da-status { padding: 10px 14px; background: var(--pastel-purple); border: 1px solid var(--pastel-purple-border); border-radius: 8px; font-size: 12px; color: var(--pastel-purple-text); font-weight: 600; text-align: center; }
+.da-result { }
+.da-stage-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+.da-stage-head { padding: 12px 16px; display: flex; align-items: flex-start; gap: 10px; }
+.da-stage-head.sh-g { background: var(--pastel-green); } .da-stage-head.sh-a { background: var(--pastel-amber); } .da-stage-head.sh-p { background: var(--pastel-purple); } .da-stage-head.sh-t { background: var(--pastel-teal); }
+.da-stage-num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+.sh-g .da-stage-num { background: var(--pastel-green-text); color: var(--pastel-green); }
+.sh-a .da-stage-num { background: var(--pastel-amber-text); color: var(--pastel-amber); }
+.sh-p .da-stage-num { background: var(--pastel-purple-text); color: var(--pastel-purple); }
+.sh-t .da-stage-num { background: var(--pastel-teal-text); color: var(--pastel-teal); }
+.da-stage-meta { flex: 1; }
+.da-stage-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.sh-g .da-stage-name { color: var(--pastel-green-text); } .sh-a .da-stage-name { color: var(--pastel-amber-text); } .sh-p .da-stage-name { color: var(--pastel-purple-text); } .sh-t .da-stage-name { color: var(--pastel-teal-text); }
+.da-stage-verdict { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.7; }
+.sh-g .da-stage-verdict { color: var(--pastel-green-text); } .sh-a .da-stage-verdict { color: var(--pastel-amber-text); } .sh-p .da-stage-verdict { color: var(--pastel-purple-text); } .sh-t .da-stage-verdict { color: var(--pastel-teal-text); }
+.da-stage-body { padding: 10px 16px; background: var(--bg2); }
+.da-stage-dims { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.da-dim-pill { font-size: 10px; padding: 1px 8px; border-radius: 20px; background: var(--bg); border: 1px solid var(--border2); color: var(--text2); font-weight: 600; }
+.da-stage-why { font-size: 12px; color: var(--text2); line-height: 1.65; }
+.da-summary { background: var(--pastel-blue); border: 1px solid var(--pastel-blue-border); border-radius: 10px; padding: 14px 18px; margin-bottom: 14px; }
+.da-summary-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pastel-blue-text); margin-bottom: 5px; }
+.da-summary-text { font-size: 13px; color: var(--pastel-blue-text); line-height: 1.7; }
+.da-error { padding: 12px 16px; background: var(--danger-bg); border: 1px solid var(--danger-b); border-radius: 8px; font-size: 12px; color: var(--danger-text); }
+
+/* Pressure test */
+.pt-section { margin-top: 0; padding-top: 28px; border-top: 1px solid var(--border); }
+.pt-heading { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 5px; }
+.pt-sub { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 16px; }
+.pt-domain-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.pt-dt { flex: 1; padding: 9px 14px; border-radius: 9px; border: 1px solid var(--border2); font-size: 13px; font-weight: 600; color: var(--text2); background: var(--bg2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.pt-dt:hover { background: var(--bg3); }
+.pt-dt.on { background: var(--pastel-purple); border-color: var(--pastel-purple-border); color: var(--pastel-purple-text); }
+.pt-cases { display: flex; flex-direction: column; gap: 10px; }
+.pt-case { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.pt-case-head { padding: 14px 18px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: background 0.15s; }
+.pt-case-head:hover { background: var(--bg2); }
+.pt-complexity { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 5px; letter-spacing: 0.05em; flex-shrink: 0; margin-top: 2px; border: 1px solid; }
+.cx-low { background: var(--pastel-green); color: var(--pastel-green-text); border-color: var(--pastel-green-border); }
+.cx-mid { background: var(--pastel-amber); color: var(--pastel-amber-text); border-color: var(--pastel-amber-border); }
+.cx-high { background: var(--pastel-coral); color: var(--pastel-coral-text); border-color: var(--pastel-coral-border); }
+.cx-hybrid { background: var(--pastel-teal); color: var(--pastel-teal-text); border-color: var(--pastel-teal-border); }
+.pt-case-meta { flex: 1; }
+.pt-case-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.pt-case-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.pt-chevron { font-size: 14px; color: var(--text3); flex-shrink: 0; transition: transform 0.2s; margin-top: 2px; }
+.pt-case.open .pt-chevron { transform: rotate(90deg); }
+.pt-case-body { display: none; padding: 0 18px 18px; background: var(--bg2); border-top: 1px solid var(--border); }
+.pt-case.open .pt-case-body { display: block; }
+.pt-scenario { font-size: 13px; color: var(--text2); line-height: 1.7; padding: 12px 0 14px; border-bottom: 1px solid var(--border); font-style: italic; }
+.pt-dims-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin: 12px 0 8px; }
+.pt-dim-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px; margin-bottom: 14px; }
+.pt-dim-item { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 9px 11px; }
+.pt-dim-name { font-size: 10px; color: var(--text3); font-weight: 600; margin-bottom: 3px; }
+.pt-dim-val { font-size: 13px; font-weight: 700; color: var(--text); }
+.pt-dim-why { font-size: 10px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
+.pt-verdict-row { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+.pt-verdict-box { flex: 1; min-width: 160px; border-radius: 9px; padding: 12px 14px; border: 1px solid; }
+.pt-verdict-box.vb-g { background: var(--pastel-green); border-color: var(--pastel-green-border); }
+.pt-verdict-box.vb-a { background: var(--pastel-amber); border-color: var(--pastel-amber-border); }
+.pt-verdict-box.vb-p { background: var(--pastel-purple); border-color: var(--pastel-purple-border); }
+.pt-verdict-box.vb-t { background: var(--pastel-teal); border-color: var(--pastel-teal-border); }
+.pt-verdict-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
+.vb-g .pt-verdict-label,.vb-g .pt-verdict-tier,.vb-g .pt-verdict-why { color: var(--pastel-green-text); }
+.vb-a .pt-verdict-label,.vb-a .pt-verdict-tier,.vb-a .pt-verdict-why { color: var(--pastel-amber-text); }
+.vb-p .pt-verdict-label,.vb-p .pt-verdict-tier,.vb-p .pt-verdict-why { color: var(--pastel-purple-text); }
+.vb-t .pt-verdict-label,.vb-t .pt-verdict-tier,.vb-t .pt-verdict-why { color: var(--pastel-teal-text); }
+.pt-verdict-tier { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.pt-verdict-why { font-size: 12px; line-height: 1.6; opacity: 0.85; }
+.pt-load-btn { display: inline-block; margin-top: 12px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border2); font-size: 12px; font-weight: 600; color: var(--purple); background: var(--bg); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.pt-load-btn:hover { background: var(--pastel-purple); border-color: var(--pastel-purple-border); }
+
+@media (max-width: 800px) {
+  .action-row { grid-template-columns: 1fr; }
+  .tdp-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 540px) {
+  .pt-dim-grid { grid-template-columns: 1fr 1fr; }
+  .tdp-grid { grid-template-columns: 1fr; }
+}
+
+/* Footer */
+.foot { font-size: 12px; color: var(--text3); text-align: center; line-height: 1.7; margin-top: 28px; }
+.foot a { color: var(--purple); text-decoration: none; font-weight: 600; }
+.foot a:hover { text-decoration: underline; }/* Footer */
+.foot { font-size: 12px; color: var(--text3); text-align: center; line-height: 1.7; margin-top: 24px; }
+.foot a { color: var(--purple); text-decoration: none; font-weight: 600; }
+.foot a:hover { text-decoration: underline; }
+
+.pipeline-stages { padding: 14px 22px 16px; border-top: 1px solid var(--border); background: var(--bg); }
+.sticky-tabs { position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 10px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+/* Pressure test domain tabs */
+.pt-domain-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.pt-dt { flex: 1; padding: 9px 14px; border-radius: 9px; border: 1px solid var(--border2); font-size: 13px; font-weight: 600; color: var(--text2); background: var(--bg2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.pt-dt:hover { background: var(--bg3); }
+.pt-dt.on { background: var(--pastel-purple); border-color: var(--pastel-purple-border); color: var(--pastel-purple-text); }
+
+@media (max-width: 640px) {
+  .pt-dim-grid { grid-template-columns: 1fr 1fr; }
+  .page-layout { flex-direction: column; }
+  .sidebar { position: static; flex: none; width: 100%; }
+  .model-sidebar { display: grid; grid-template-columns: 1fr; }
+}
+
+/* Hybrid pipeline result */
+.rhead.rh-t { background: var(--pastel-teal); }
+.rverdict.ct { color: var(--pastel-teal-text); }
+.reyebrow.ct { color: var(--pastel-teal-text); }
+.rsub.ct { color: var(--pastel-teal-text); }
+.tscore.ct { color: var(--pastel-teal-text); }
+.tc.best-t { background: var(--pastel-teal); }
+.wbadge-t { background: rgba(10,80,64,0.1); color: var(--pastel-teal-text); border-color: var(--pastel-teal-border); }
+.tbar.bt { background: #1D9E75; }
+
+.pt-load-btn { display: inline-block; margin-top: 14px; padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border2); font-size: 13px; font-weight: 600; color: var(--purple); background: var(--bg); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.pt-load-btn:hover { background: var(--pastel-purple); border-color: var(--pastel-purple-border); }
+.pipeline-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; }
+.pipeline-row { display: flex; gap: 0; align-items: stretch; }
+.pipeline-stage { flex: 1; border-radius: 0; border: 1px solid var(--border); padding: 12px 14px; position: relative; background: var(--bg2); }
+.pipeline-stage:first-child { border-radius: 10px 0 0 10px; }
+.pipeline-stage:last-child { border-radius: 0 10px 10px 0; }
+.pipeline-stage + .pipeline-stage { border-left: none; }
+.ps-step { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+.ps-tier { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.ps-tier-g { color: var(--pastel-green-text); }
+.ps-tier-a { color: var(--pastel-amber-text); }
+.ps-tier-p { color: var(--pastel-purple-text); }
+.ps-tier-t { color: var(--pastel-teal-text); }
+.ps-what { font-size: 11px; color: var(--text2); line-height: 1.5; }
+.ps-arrow { display: flex; align-items: center; padding: 0 6px; color: var(--text3); font-size: 14px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Banking AI · Decision tool</div>
+  <div class="title">AI Model Selection and Decision Framework for Banks</div>
+  <div class="hero-sub">Nine dimensions. Two domains. One recommendation — with the reasoning behind it.</div>
+</div>
+
+<div class="info-strip" id="info-strip">
+  <div class="info-strip-tabs">
+    <button class="ist ist-banks on" onclick="toggleStrip('banks',this)">When banks should use this</button>
+    <button class="ist ist-tool" onclick="toggleStrip('tool',this)">What this tool does</button>
+    <button class="ist ist-how" onclick="toggleStrip('how',this)">How to use it</button>
+    <button class="ist-close" onclick="closeStrip()">&#10005;</button>
+  </div>
+  <div class="info-strip-body" id="strip-body">
+    <div id="strip-banks">
+      <div class="strip-moments">
+        <div class="strip-moment"><span class="sm-num sm-banks">1</span><div><strong>Before the project starts</strong> — run the framework before architecture decisions, vendor conversations, or budget commitment. The output becomes part of the project initiation document.</div></div>
+        <div class="strip-moment"><span class="sm-num sm-banks">2</span><div><strong>When scope changes</strong> — AI projects drift. A contact centre bot handling balance queries gets asked to handle disputes. Re-run whenever the use case expands.</div></div>
+        <div class="strip-moment"><span class="sm-num sm-banks">3</span><div><strong>At model risk validation</strong> — the nine dimension scores give the risk team a structured audit trail before production approval.</div></div>
+      </div>
+    </div>
+    <div id="strip-tool" style="display:none">
+      <p class="strip-text">Banks deploying AI face a choice between three model architectures, each with distinct implications for capability, cost, governance, and overhead. For workflows that span multiple sensitivity levels within a single session, the right answer may be a hybrid pipeline where different tiers are called in sequence. This framework evaluates your use case across nine dimensions and recommends the right tier or pipeline.</p>
+    </div>
+    <div id="strip-how" style="display:none">
+      <p class="strip-text">Pick your domain, answer nine questions across three sections, score where the bank is today (not where it hopes to be), and click "See result." Or start below with the <a href="#pressure-test" class="strip-link">pressure test scenarios</a> — real banking workflows pre-loaded and ready to explore.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tier-legend-bar">
+  <span class="tlb-label">Model tiers</span>
+  <span class="tlb-pill tlb-g" title="Narrow, high-volume, stable tasks. Requires ML engineering.">SLM</span>
+  <span class="tlb-pill tlb-a" title="Inherits frontier reasoning at lower cost. Practical default for most banks.">Distilled frontier</span>
+  <span class="tlb-pill tlb-p" title="Maximum reasoning depth. Required when stakes of a wrong output are high.">Frontier model</span>
+  <span class="tlb-pill tlb-t" title="Multiple tiers in sequence — e.g. SLM routes, frontier handles escalations.">Hybrid pipeline</span>
+  <a href="#tier-detail" class="tlb-more" onclick="showTierDetail()">What are these? &#8964;</a>
+</div>
+
+<div id="tier-detail" class="tier-detail-panel" style="display:none">
+  <div class="tdp-grid">
+    <div class="trc trc-g"><span class="trc-badge">SLM</span><strong>Purpose-built SLM</strong><span>Fine-tuned on the bank's own data. Fast, cheap, on-premise. Requires ML engineering to build and maintain.</span></div>
+    <div class="trc trc-a"><span class="trc-badge">Distilled</span><strong>Distilled frontier</strong><span>Inherits frontier reasoning at lower cost. Provider manages updates. Practical default for most banking tasks.</span></div>
+    <div class="trc trc-p"><span class="trc-badge">Frontier</span><strong>Frontier model</strong><span>Maximum reasoning depth and security awareness. Required when the stakes of a wrong output are high.</span></div>
+    <div class="trc trc-t"><span class="trc-badge">Hybrid</span><strong>Hybrid pipeline</strong><span>Multiple tiers in sequence. A balance query handled by an SLM escalates mid-conversation to the frontier model for consumer rights advice.</span></div>
+  </div>
+</div>
+
+<div class="action-row">
+
+  <div class="action-panel ap-framework">
+    <div class="ap-header">
+      <div class="ap-title">Model selection framework</div>
+      <div class="dtabs">
+        <button class="dt on" onclick="setD('c',this)">Customer-facing</button>
+        <button class="dt" onclick="setD('k',this)">Code generation</button>
+      </div>
+    </div>
+    <div class="progress-row" id="prog"></div>
+    <div id="panels"></div>
+    <div id="result-area"></div>
+  </div>
+
+  <div class="action-panel ap-analyser">
+    <div class="ap-header">
+      <div class="ap-title">Use case document analyser <span class="ap-ai-badge">AI</span></div>
+    </div>
+    <p class="ap-desc">Upload a process or functional spec document. Claude decomposes it into stages and recommends the right model tier for each — even when the document does not mention volume, latency, or sensitivity explicitly.</p>
+
+    <!-- Intake form -->
+    <div class="intake-form" id="intake-form">
+      <div class="intake-label">About your bank <span class="intake-why">(helps where the document is silent on organisational context)</span></div>
+      <div class="intake-grid">
+        <div class="intake-item">
+          <div class="intake-q">Typical process volume</div>
+          <select class="intake-sel" id="intake-volume">
+            <option value="">Select...</option>
+            <option value="low">Low — hundreds per day</option>
+            <option value="medium">Medium — thousands per day</option>
+            <option value="high">High — hundreds of thousands per month</option>
+            <option value="very_high">Very high — millions per month</option>
+          </select>
+        </div>
+        <div class="intake-item">
+          <div class="intake-q">ML engineering capacity</div>
+          <select class="intake-sel" id="intake-ml">
+            <option value="">Select...</option>
+            <option value="none">None — no ML team</option>
+            <option value="small">Small — 2 to 5 engineers</option>
+            <option value="dedicated">Dedicated — 10+ ML engineers</option>
+          </select>
+        </div>
+        <div class="intake-item">
+          <div class="intake-q">Model risk governance</div>
+          <select class="intake-sel" id="intake-gov">
+            <option value="">Select...</option>
+            <option value="early">Early stage — no formal framework yet</option>
+            <option value="developing">Developing — framework in progress</option>
+            <option value="established">Established — regular validation cadence</option>
+          </select>
+        </div>
+        <div class="intake-item">
+          <div class="intake-q">Labelled historical data for this process</div>
+          <select class="intake-sel" id="intake-data">
+            <option value="">Select...</option>
+            <option value="none">None available</option>
+            <option value="partial">Partial — unstructured or uncurated</option>
+            <option value="yes">Yes — labelled and curated</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="da-upload-area" onclick="document.getElementById('da-file-input').click()">
+      <input type="file" id="da-file-input" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleFile(this)">
+      <div class="da-upload-icon">&#128196;</div>
+      <div class="da-upload-label">Click to upload a document</div>
+      <div class="da-upload-hint">PDF, Word, text, or markdown · functional spec, process flow, workflow description</div>
+    </div>
+    <div id="da-filename" class="da-filename" style="display:none"></div>
+    <div class="da-domain-row">
+      <div class="da-domain-label">Domain of this document</div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+        <button class="da-dt on" onclick="setDaDomain('c',this)">Customer-facing</button>
+        <button class="da-dt" onclick="setDaDomain('k',this)">Code generation</button>
+        <button class="da-dt" onclick="setDaDomain('both',this)">Both</button>
+      </div>
+    </div>
+    <button class="da-run-btn" id="da-run-btn" onclick="runAnalysis()" disabled>Analyse document</button>
+    <div id="da-status" class="da-status" style="display:none"></div>
+    <div id="da-result" class="da-result" style="display:none"></div>
+  </div>
+
+</div>
+
+<div class="pt-section" id="pressure-test">
+  <div class="pt-heading">Pressure test: real banking scenarios</div>
+  <div class="pt-sub">See how the framework applies to real banking use cases. The hybrid scenarios show what happens when a single workflow spans multiple model tiers — a balance query escalating mid-conversation into a consumer rights discussion. Load any scenario into the tool above.</div>
+  <div class="pt-domain-row">
+    <button class="pt-dt on" onclick="setPTDomain('c',this)">Customer-facing scenarios</button>
+    <button class="pt-dt" onclick="setPTDomain('k',this)">Code generation scenarios</button>
+  </div>
+  <div class="pt-cases" id="pt-cases"></div>
+</div>
+
+<div class="foot">
+  AI model selection framework for banks &nbsp;·&nbsp; <a href="https://linkedin.com/in/salilravindran" target="_blank">Salil Ravindran</a>
+</div>
+
+<script>
+function toggleStrip(id, btn) {
+  const body = document.getElementById('strip-body');
+  const allPanels = ['banks','tool','how'];
+  const curActive = btn.classList.contains('on');
+  allPanels.forEach(t => {
+    document.getElementById('strip-'+t).style.display = 'none';
+    document.querySelectorAll('.ist').forEach(b => b.classList.remove('on'));
+  });
+  if (!curActive) {
+    document.getElementById('strip-'+id).style.display = 'block';
+    btn.classList.add('on');
+    document.getElementById('info-strip').style.display = 'block';
+  } else {
+    document.getElementById('info-strip').querySelector('.info-strip-body').style.display = 'none';
+  }
+}
+
+function closeStrip() {
+  document.getElementById('info-strip').style.display = 'none';
+}
+
+function showTierDetail() {
+  const el = document.getElementById('tier-detail');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  return false;
+}
+
+let dom = 'c', step = 0, bkOpen = false, ptDom = 'c';
+const vals = {};
+
+const PT_CASES = [
+  {
+    id: 'pt1', domain: 'c',
+    title: 'Contact centre balance and transaction query',
+    desc: 'A customer calls asking for their current balance and whether a scheduled payment has gone out. This happens thousands of times daily across the bank\'s contact centre.',
+    complexity: 'Low complexity', cxCls: 'cx-low',
+    scenario: 'Priya calls the contact centre at 9am asking for her savings balance and whether her rent payment of Rs 18,000 cleared yesterday. She wants a quick answer and is in a hurry.',
+    dims: [
+      { name: 'Sensitivity', val: 2, why: 'Wrong balance is recoverable and low regulatory risk' },
+      { name: 'Task complexity', val: 1, why: 'Single intent, deterministic output, no escalation risk' },
+      { name: 'Latency', val: 2, why: 'Contact centre expects sub-two-second response' },
+      { name: 'Query volume', val: 5, why: 'Millions of such calls monthly across the bank' },
+      { name: 'Data residency', val: 3, why: 'RBI localisation applies, private cloud acceptable' },
+      { name: 'Training data', val: 4, why: 'Bank has years of labelled call transcripts for this use case' },
+      { name: 'Cost tolerance', val: 2, why: 'High volume makes per-inference cost a primary constraint' },
+      { name: 'ML capacity', val: 3, why: 'Bank has a small ML team capable of maintaining an SLM' },
+      { name: 'Model risk', val: 2, why: 'Early-stage governance framework, limited validation bandwidth' }
+    ],
+    verdict: { tier: 'Purpose-built SLM', cls: 'vb-g',
+      why: 'This is the textbook SLM use case. The task is narrow, deterministic, and stable. Volume is very high, making per-inference cost the primary constraint. The bank has the training data and sufficient ML capacity. A purpose-built SLM running on-premise answers this query faster and cheaper than any larger model, with no meaningful capability trade-off for this specific task.' },
+    loadVals: { c1:2, c2:1, c3:2, c4:5, c5:3, c6:4, c7:2, c8:3, c9:2 }
+  },
+  {
+    id: 'pt2', domain: 'c',
+    title: 'Transaction dispute and consumer rights query',
+    desc: 'A customer raises a dispute on an unfamiliar card transaction and asks what their rights are and how quickly it can be resolved. The query starts simple but escalates into regulatory territory.',
+    complexity: 'Moderate complexity', cxCls: 'cx-mid',
+    scenario: 'Rajan contacts the bank saying he does not recognise a Rs 4,200 charge from an online merchant three days ago. He has already tried to resolve it once. He wants to know what the bank will do, how long it takes, and what happens to his credit score if the merchant disputes his claim.',
+    dims: [
+      { name: 'Sensitivity', val: 4, why: 'Consumer protection regulation applies. Wrong advice on rights is a compliance risk.' },
+      { name: 'Task complexity', val: 4, why: 'Starts as a lookup but expands into regulatory advice and case escalation' },
+      { name: 'Latency', val: 3, why: 'Chat or assisted agent, two to three seconds acceptable' },
+      { name: 'Query volume', val: 3, why: 'Moderate volume, not as high as simple enquiries' },
+      { name: 'Data residency', val: 3, why: 'Private cloud deployment within India region' },
+      { name: 'Training data', val: 3, why: 'Some dispute transcripts available but complex cases underrepresented' },
+      { name: 'Cost tolerance', val: 3, why: 'Moderate volume means cost is not the primary constraint' },
+      { name: 'ML capacity', val: 3, why: 'Bank has ML team but bandwidth is stretched' },
+      { name: 'Model risk', val: 3, why: 'Model risk function exists but validation cadence is still developing' }
+    ],
+    verdict: { tier: 'Distilled frontier', cls: 'vb-a',
+      why: 'The variable scope of this query disqualifies the SLM. A balance query that escalates into consumer rights advice will expose the SLM\'s reasoning limits at exactly the point it matters. The distilled frontier model handles the full arc of the conversation, reasons over policy documents via RAG, and expresses uncertainty appropriately. A hard escalation trigger to a human agent should be configured for anything involving formal dispute rights.' },
+    loadVals: { c1:4, c2:4, c3:3, c4:3, c5:3, c6:3, c7:3, c8:3, c9:3 }
+  },
+  {
+    id: 'pt3', domain: 'c',
+    title: 'Financial distress and loan restructuring conversation',
+    desc: 'A customer calls unable to make their EMI this month. The conversation touches debt restructuring, credit score implications, and the bank\'s hardship policy. Human welfare and regulatory obligation are both in play.',
+    complexity: 'High complexity', cxCls: 'cx-high',
+    scenario: 'Meena calls, clearly distressed. She says she cannot pay her personal loan EMI this month, is behind on rent, and is worried about losing her home. She wants to know what the bank can do, whether there is a moratorium option, and what a missed payment will do to her CIBIL score. She has two children and is scared.',
+    dims: [
+      { name: 'Sensitivity', val: 5, why: 'Consumer protection, RBI fair practices code, and human welfare all apply simultaneously' },
+      { name: 'Task complexity', val: 5, why: 'Debt restructuring, hardship policy, credit bureau implications, empathetic tone across extended multi-turn conversation' },
+      { name: 'Latency', val: 3, why: 'Voice channel, two to three seconds acceptable' },
+      { name: 'Query volume', val: 2, why: 'Low volume, high stakes. These calls are rare but consequential.' },
+      { name: 'Data residency', val: 3, why: 'Private cloud within India, full audit logging required' },
+      { name: 'Training data', val: 2, why: 'Hardship call transcripts are rare, sensitive, and difficult to curate' },
+      { name: 'Cost tolerance', val: 4, why: 'Low volume means per-inference cost is not meaningful. Getting this right matters more.' },
+      { name: 'ML capacity', val: 3, why: 'Bank has ML capacity but distress call data is insufficient for safe SLM training' },
+      { name: 'Model risk', val: 4, why: 'Governance team can support Tier 1 validation for this high-sensitivity use case' }
+    ],
+    verdict: { tier: 'Frontier model', cls: 'vb-p',
+      why: 'No other tier is appropriate here. The SLM cannot handle the reasoning complexity or hold empathetic tone across extended distress conversations. The distilled frontier may miss the calibrated uncertainty required when stating what the bank can and cannot commit to. The frontier model reasons carefully over hardship policy documents and maintains consistent bounded behaviour throughout. Mandatory human handoff before any commitment is made to the customer is a non-negotiable governance control.' },
+    loadVals: { c1:5, c2:5, c3:3, c4:2, c5:3, c6:2, c7:4, c8:3, c9:4 }
+  },
+  {
+    id: 'ptk1', domain: 'k',
+    title: 'Generating boilerplate and unit test scaffolding',
+    desc: 'A developer on the core banking team needs to generate standard boilerplate code and unit test stubs for a new internal reporting module. No production systems are involved.',
+    complexity: 'Low complexity', cxCls: 'cx-low',
+    scenario: 'Vikram is building a new internal dashboard that aggregates branch performance data from existing APIs. He needs boilerplate service layer code, DTO classes, and unit test stubs following the bank\'s standard Spring Boot conventions. The code will not touch any customer data or transactional systems.',
+    dims: [
+      { name: 'System proximity', val: 1, why: 'Internal reporting only, no production or customer-facing system involved' },
+      { name: 'Code complexity', val: 1, why: 'Standard boilerplate following well-documented conventions' },
+      { name: 'Latency', val: 4, why: 'Deliberate generation, not inline autocomplete. Vikram is comfortable waiting.' },
+      { name: 'IP sensitivity', val: 2, why: 'Internal tooling, not core proprietary algorithms' },
+      { name: 'Developer volume', val: 2, why: 'Small internal tools team, per-inference cost not significant' },
+      { name: 'Training data quality', val: 3, why: 'Bank has some curated Spring Boot examples but full security review not done' },
+      { name: 'Productivity economics', val: 3, why: 'Developer productivity gain and cost are roughly balanced at this team size' },
+      { name: 'ML and curation capacity', val: 2, why: 'No dedicated ML team for coding SLM. Codebase curation is partial.' },
+      { name: 'Security governance', val: 2, why: 'Standard SAST in place but no AI-specific red team capability yet' }
+    ],
+    verdict: { tier: 'Distilled frontier', cls: 'vb-a',
+      why: 'Although this is a low-sensitivity task, the bank lacks both ML capacity and a fully curated codebase to safely build and maintain a purpose-built coding SLM. The distilled frontier model handles boilerplate generation well, requires no bank-side retraining, and has security-aware training from the frontier model it was distilled from. At this team size and task volume, the cost difference from an SLM is negligible.' },
+    loadVals: { k1:1, k2:1, k3:4, k4:2, k5:2, k6:3, k7:3, k8:2, k9:2 }
+  },
+  {
+    id: 'ptk2', domain: 'k',
+    title: 'Writing API integration code against the core banking system',
+    desc: 'A developer needs to write code that calls the core banking system\'s APIs to retrieve account data and write transaction records. The code will run in production and is called by the mobile app.',
+    complexity: 'Moderate complexity', cxCls: 'cx-mid',
+    scenario: 'Ananya is building the backend service that powers the mobile banking app\'s account summary screen. She needs to write code that calls Finacle APIs to fetch balances, transaction history, and standing instructions. The service will handle authenticated customer requests in production, and any error in data handling could expose one customer\'s data to another.',
+    dims: [
+      { name: 'System proximity', val: 4, why: 'Directly calls core banking APIs in production, handling live customer data' },
+      { name: 'Code complexity', val: 3, why: 'Structured API integration with error handling, not trivial but not system-wide side effects' },
+      { name: 'Latency', val: 4, why: 'Deliberate generation task. Ananya will review carefully before committing.' },
+      { name: 'IP sensitivity', val: 3, why: 'Integration logic touches customer data handling but not the core banking engine itself' },
+      { name: 'Developer volume', val: 3, why: 'Mid-sized engineering team, cost is a factor but not dominant' },
+      { name: 'Training data quality', val: 2, why: 'Codebase has legacy patterns in API integration layer that have not been security-reviewed' },
+      { name: 'Productivity economics', val: 3, why: 'Developer time is valuable and the integration work is repetitive' },
+      { name: 'ML and curation capacity', val: 2, why: 'No ML team available for coding SLM, and legacy integration code is uncurated' },
+      { name: 'Security governance', val: 3, why: 'SAST in place, peer review is mandatory, but no AI-specific code red team yet' }
+    ],
+    verdict: { tier: 'Distilled frontier', cls: 'vb-a',
+      why: 'System proximity is high enough to rule out a purpose-built SLM trained on uncurated legacy integration code. The distilled frontier model has security-aware training that will generate safer API integration patterns than a model learned from the bank\'s historical codebase. The existing SAST and peer review controls provide the backstop governance layer. An AI-specific red team exercise should be added before this workflow is approved for production-path code.' },
+    loadVals: { k1:4, k2:3, k3:4, k4:3, k5:3, k6:2, k7:3, k8:2, k9:3 }
+  },
+  {
+    id: 'pt4', domain: 'c',
+    title: 'Full contact centre AI deployment across all query types',
+    desc: 'A bank wants to deploy AI across its entire contact centre, handling everything from balance queries to financial hardship calls within a single channel. Volume is high and the task range is wide.',
+    complexity: 'Hybrid pipeline', cxCls: 'cx-hybrid',
+    scenario: 'The bank wants one AI layer handling all inbound contact centre queries. On a given day the same channel handles Priya asking her balance, Rajan disputing a charge, and Meena in financial distress. The bank cannot deploy three separate AI systems per query type. It needs one architecture that handles all three safely.',
+    dims: [
+      { name: 'Sensitivity', val: 4, why: 'The channel handles everything from trivial queries to regulatory and welfare situations' },
+      { name: 'Task complexity', val: 4, why: 'Task scope varies enormously across a single channel' },
+      { name: 'Latency', val: 2, why: 'Contact centre needs fast response across all query types' },
+      { name: 'Query volume', val: 5, why: 'Very high volume across the full mix of query types' },
+      { name: 'Data residency', val: 3, why: 'Private cloud within India region satisfies RBI requirements' },
+      { name: 'Training data', val: 3, why: 'Reasonable corpus of transcripts but complex cases underrepresented' },
+      { name: 'Cost tolerance', val: 3, why: 'High volume creates cost pressure but high sensitivity justifies investment' },
+      { name: 'ML capacity', val: 3, why: 'Bank has a small ML team' },
+      { name: 'Model risk', val: 3, why: 'Model risk function developing, can support tiered validation' }
+    ],
+    verdict: { tier: 'Hybrid pipeline', cls: 'vb-t',
+      why: 'No single model tier can handle this use case correctly. A purpose-built SLM at the routing layer handles intent classification and simple deterministic queries at speed and low cost. A distilled frontier model handles the substantive conversation layer for standard banking queries. The frontier model handles escalated high-sensitivity interactions including financial distress, formal complaints, and regulatory queries, with a mandatory human handoff gate before any commitment is made.' },
+    loadVals: { c1:4, c2:4, c3:2, c4:5, c5:3, c6:3, c7:3, c8:3, c9:3 }
+  },
+  {
+    id: 'ptk4', domain: 'k',
+    title: 'Full developer AI tooling across the bank\'s engineering team',
+    desc: 'The bank wants to roll out AI coding assistance across all 400 developers, covering everything from inline autocomplete for junior developers to security-critical code generation for the fraud and payments team.',
+    complexity: 'Hybrid pipeline', cxCls: 'cx-hybrid',
+    scenario: 'The bank is deploying AI coding tools to its entire engineering organisation. Junior developers in the internal tools team want inline autocomplete. Mid-level developers building API integrations want deliberate code generation. Senior developers in the fraud engineering team need AI assistance with complex, security-critical detection logic. One deployment policy needs to cover all three cohorts.',
+    dims: [
+      { name: 'System proximity', val: 4, why: 'The deployment spans low-risk internal tooling all the way to production fraud systems' },
+      { name: 'Code complexity', val: 4, why: 'Task complexity varies from simple completion to multi-system security logic' },
+      { name: 'Latency', val: 2, why: 'Junior developers need inline autocomplete at keystroke speed' },
+      { name: 'IP sensitivity', val: 4, why: 'Fraud and payments codebase is core proprietary IP' },
+      { name: 'Developer volume', val: 4, why: '400 developers makes per-inference cost material at scale' },
+      { name: 'Training data quality', val: 3, why: 'Codebase partially curated but fraud engineering section is security-reviewed' },
+      { name: 'Productivity economics', val: 4, why: 'Developer productivity at scale is a significant business value driver' },
+      { name: 'ML and curation capacity', val: 3, why: 'Security engineering team available for high-proximity code governance' },
+      { name: 'Security governance', val: 3, why: 'SAST in place, AI red team in development for critical code paths' }
+    ],
+    verdict: { tier: 'Hybrid pipeline', cls: 'vb-t',
+      why: 'The deployment spans three genuinely different risk profiles that cannot be collapsed into a single tier. A purpose-built SLM handles inline autocomplete for all developers on low-proximity tasks, delivering the speed junior developers need. A distilled frontier model handles deliberate code generation for standard development work across the engineering team. The frontier model is reserved for the fraud and payments engineering team working on security-critical, high-proximity code, with mandatory security review before any AI-generated code is promoted to production.' },
+    loadVals: { k1:4, k2:4, k3:2, k4:4, k5:4, k6:3, k7:4, k8:3, k9:3 }
+  },
+  {
+    id: 'ptk3', domain: 'k',
+    title: 'Writing fraud detection rules and transaction scoring logic',
+    desc: 'A senior developer is tasked with implementing new transaction fraud scoring logic that will run on every card transaction in real time. This code is at the heart of the bank\'s fraud prevention system.',
+    complexity: 'High complexity', cxCls: 'cx-high',
+    scenario: 'Deepak is implementing a new rule-based scoring module that sits within the bank\'s real-time fraud detection pipeline. The code must evaluate 12 transaction signals in under 80ms and write a fraud score that triggers downstream decisioning. A logic error could either miss genuine fraud or block legitimate transactions at scale. The codebase has been security-reviewed and the bank has a dedicated security engineering team.',
+    dims: [
+      { name: 'System proximity', val: 5, why: 'Runs on every card transaction in real time. A bug affects every customer.' },
+      { name: 'Code complexity', val: 5, why: 'Multi-signal evaluation with strict latency constraints and downstream decisioning side effects' },
+      { name: 'Latency', val: 3, why: 'Deliberate generation. Deepak will review and test extensively before any deployment.' },
+      { name: 'IP sensitivity', val: 5, why: 'Core fraud detection logic is the bank\'s most sensitive proprietary algorithm' },
+      { name: 'Developer volume', val: 2, why: 'Small specialist fraud engineering team. Per-inference cost is not a consideration.' },
+      { name: 'Training data quality', val: 4, why: 'The fraud codebase has been security-reviewed and curated by the security team' },
+      { name: 'Productivity economics', val: 4, why: 'Senior developer time is expensive. Quality and correctness justify higher model cost.' },
+      { name: 'ML and curation capacity', val: 4, why: 'Dedicated security engineering team available for curation and review' },
+      { name: 'Security governance', val: 4, why: 'SAST, mandatory security review, and AI-specific red team protocols in development' }
+    ],
+    verdict: { tier: 'Frontier model', cls: 'vb-p',
+      why: 'This is the highest-stakes code generation use case in a bank. Every transaction passes through this logic. The frontier model\'s security reasoning depth, ability to reason across complex multi-signal logic, and calibrated uncertainty on novel patterns make it the only appropriate choice. The distilled frontier carries a meaningful capability gap for this complexity and consequence level. The bank\'s curated codebase and security governance capacity make this deployment governable. A full AI red team exercise is required before any AI-generated fraud logic is promoted to production.' },
+    loadVals: { k1:5, k2:5, k3:3, k4:5, k5:2, k6:4, k7:4, k8:4, k9:4 }
+  }
+];
+
+
+function renderPT() {
+  const cases = PT_CASES.filter(c => c.domain === ptDom);
+  document.getElementById('pt-cases').innerHTML = cases.map(c => `
+    <div class="pt-case" id="${c.id}">
+      <div class="pt-case-head" onclick="togglePT('${c.id}')">
+        <span class="pt-complexity ${c.cxCls}">${c.complexity}</span>
+        <div class="pt-case-meta">
+          <div class="pt-case-title">${c.title}</div>
+          <div class="pt-case-desc">${c.desc}</div>
+        </div>
+        <div class="pt-chevron">&#9658;</div>
+      </div>
+      <div class="pt-case-body">
+        <div class="pt-scenario">"${c.scenario}"</div>
+        <div class="pt-dims-label">How this scenario scores on the nine dimensions</div>
+        <div class="pt-dim-grid">
+          ${c.dims.map(d => `
+            <div class="pt-dim-item">
+              <div class="pt-dim-name">${d.name}</div>
+              <div class="pt-dim-val">${d.val} / 5</div>
+              <div class="pt-dim-why">${d.why}</div>
+            </div>`).join('')}
+        </div>
+        <div class="pt-dims-label">Recommendation</div>
+        <div class="pt-verdict-row">
+          <div class="pt-verdict-box ${c.verdict.cls}">
+            <div class="pt-verdict-label">Recommended tier</div>
+            <div class="pt-verdict-tier">${c.verdict.tier}</div>
+            <div class="pt-verdict-why">${c.verdict.why}</div>
+          </div>
+        </div>
+        <button class="pt-load-btn" onclick="loadScenario('${c.id}')">Load this scenario into the framework above &#8593;</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setPTDomain(d, btn) {
+  ptDom = d;
+  document.querySelectorAll('.pt-dt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderPT();
+}
+
+function togglePT(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function loadScenario(id) {
+  const c = PT_CASES.find(x => x.id === id);
+  if (!c) return;
+  dom = c.domain;
+  document.querySelectorAll('.dt').forEach((b,i) => {
+    b.classList.toggle('on', (c.domain === 'c' && i === 0) || (c.domain === 'k' && i === 1));
+  });
+  step = 0;
+  document.getElementById('result-area').innerHTML = '';
+  renderProg();
+  renderPanels();
+  setTimeout(() => {
+    const prefix = c.domain;
+    Object.entries(c.loadVals).forEach(([qid, val]) => {
+      const el = document.getElementById(qid);
+      if (el) el.value = val;
+      const vEl = document.getElementById('qv-' + qid);
+      if (vEl) vEl.textContent = val;
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 80);
+}
+
+
+const D = {
+  c: {
+    sections: [
+      {
+        title: 'Task dimensions',
+        qs: [
+          { id:'c1', num:'01', label:'How consequential is a wrong AI output?', lo:'Low: recoverable error', hi:'High: regulatory or customer harm', weight:'High', wc:'wh',
+            dnote: 'Think about what happens when the AI is confidently wrong at 2am with no agent available.' },
+          { id:'c2', num:'02', label:'How complex and variable is the task?', lo:'Narrow: single intent, one output', hi:'Complex: multi-turn, unpredictable scope', weight:'High', wc:'wh',
+            dnote: 'Tasks that seem simple often escalate. A balance query can become a distress call. Score for the worst realistic case.' },
+          { id:'c3', num:'03', label:'How real-time does the response need to be?', lo:'Instant: sub-second mandatory', hi:'Async: latency unconstrained', weight:'High', wc:'wh',
+            dnote: 'Contact centre needs sub-second. In-app chat can tolerate 1-2 seconds. Batch processing can take minutes. Score honestly for the actual channel.' }
+        ]
+      },
+      {
+        title: 'Deployment & data dimensions',
+        qs: [
+          { id:'c4', num:'04', label:'How high is query volume?', lo:'Low: hundreds per day', hi:'Very high: millions per month', weight:'High', wc:'wh',
+            dnote: 'High volume makes per-inference cost a primary variable. At low volume, cost differences between model tiers are modest.' },
+          { id:'c5', num:'05', label:'How strict is the data residency requirement?', lo:'Managed private cloud acceptable', hi:'Fully air-gapped on-premise only', weight:'Mid', wc:'wm',
+            dnote: 'RBI data localisation requires India-region hosting. Fully air-gapped deployment mandates on-premise GPU infrastructure, which is a significant investment.' },
+          { id:'c6', num:'06', label:'How much labelled training data is available?', lo:'None: no curated interaction corpus', hi:'Rich: 100k+ labelled interactions', weight:'Mid', wc:'wm',
+            dnote: 'Contact centre transcripts, chat logs, resolved disputes, labelled and curated. Without this, a purpose-built SLM cannot be trained well.' }
+        ]
+      },
+      {
+        title: 'Bank capacity dimensions',
+        qs: [
+          { id:'c7', num:'07', label:'How tolerant is the bank of inference cost?', lo:'Very sensitive: cost per query matters', hi:'Not a constraint: capability first', weight:'High', wc:'wh',
+            dnote: 'At 2M queries per month the cost differential between SLM and frontier model is substantial. At 50k queries per month it rarely determines the decision.' },
+          { id:'c8', num:'08', label:'How capable is the bank\'s ML engineering team?', lo:'No ML team: cannot retrain SLMs', hi:'Dedicated team: full fine-tuning capability', weight:'Mid', wc:'wm',
+            dnote: 'SLM maintenance requires curating training data, running fine-tuning pipelines, validating, and deploying new versions. Without ML capacity this is not feasible.' },
+          { id:'c9', num:'09', label:'How mature is the model risk function?', lo:'None: no validation framework yet', hi:'Mature: established validation cadence', weight:'Mid', wc:'wm',
+            dnote: 'Higher-tier models and more sensitive use cases require more frequent and rigorous validation. Match the model choice to what the team can actually govern.' }
+        ]
+      }
+    ],
+    score(v) {
+      const [s,cx,lt,vol,res,data,cost,ml,mr] = v;
+      return [
+        norm((6-s)*10+(6-cx)*9+(6-lt)*10+vol*10+res*4+data*10+(6-cost)*8+ml*9+(6-mr)*3, 225),
+        norm((s<=3?s*8:s*5)+(cx<=3?cx*7:cx*5)+lt*5+(6-vol)*5+vol*3+res*4+(6-data)*6+data*2+(6-cost)*5+cost*3+(6-ml)*7+(6-mr)*4+mr*2, 230),
+        norm(s*14+cx*12+(6-lt)*4+lt*3+(6-vol)*8+(6-res)*4+res*2+(6-data)*7+cost*9+(6-ml)*3+mr*8, 270)
+      ];
+    },
+    dimScores(v, ti) {
+      const [s,cx,lt,vol,res,data,cost,ml,mr] = v;
+      const dims = [
+        ['Sensitivity fit', ti===0?(6-s)*2:ti===1?s<=3?s*1.6:s*1:s*2.8],
+        ['Complexity fit', ti===0?(6-cx)*1.8:ti===1?cx<=3?cx*1.4:cx*1:cx*2.4],
+        ['Latency fit', ti===0?(6-lt)*2:ti===1?lt*1.2:lt*0.8],
+        ['Volume economics', ti===0?vol*2:ti===1?(6-vol)*1+vol*0.6:(6-vol)*1.6],
+        ['Residency fit', ti===0?res*0.8:ti===1?res*0.8:(6-res)*0.8+res*0.4],
+        ['Training data', ti===0?data*2:ti===1?(6-data)*1.2+data*0.4:(6-data)*1.4],
+        ['Cost efficiency', ti===0?(6-cost)*1.6:ti===1?(6-cost)*1+cost*0.6:cost*1.8],
+        ['ML capacity', ti===0?ml*1.8:ti===1?(6-ml)*1.4:(6-ml)*0.6],
+        ['Model risk fit', ti===0?(6-mr)*0.6:ti===1?(6-mr)*0.8+mr*0.4:mr*1.6]
+      ];
+      return dims.map(([n,v]) => [n, Math.round(Math.min(Math.max(v,0),20))]);
+    },
+    rat(v, w) {
+      const [s,cx,lt,vol,res,data,cost,ml,mr] = v;
+      if(w===0){
+        if(data<=2) return 'Training data availability is the blocking constraint. A consumer SLM cannot be built without a curated, labelled interaction corpus. Until that data exists, distilled frontier is the realistic choice.';
+        if(ml<=2) return 'ML team capacity is too low to operate an SLM sustainably. The retraining cycle — data curation, fine-tuning, validation — requires dedicated ML engineering. Without it, the SLM becomes stale.';
+        if(lt<=2&&vol>=4) return 'Real-time, high-volume tasks are the SLM\'s strongest case. Cost and latency advantages are most acute here. Ensure sufficient training data and ML capacity to maintain the retraining cycle.';
+        return 'Narrow, lower-sensitivity consumer tasks with adequate ML capacity and training data. Cost advantage is real. Monitor retraining cadence and drift signals closely.';
+      }
+      if(w===1){
+        if(ml<=2&&data<=2) return 'The practical default when the bank has neither training data nor ML capacity. Provider manages the update cadence with no retraining burden. Security-aware training inherited from the frontier model.';
+        if(s>=4&&cx>=4) return 'Viable but watch the calibration gap. Distilled models express uncertainty less reliably than the full frontier on genuinely novel, high-complexity queries. Test escalation triggers thoroughly.';
+        return 'Strong balance of capability and cost across most consumer banking workflows. Handles variable task scope better than an SLM at a fraction of frontier cost. The practical default for most banks.';
+      }
+      if(s<=2&&cx<=2) return 'Frontier model is overkill at these settings. Reasoning depth and cost overhead are not justified. Route to distilled frontier and reserve the frontier model for where it earns its place.';
+      if(lt<=1&&vol>=4) return 'Hard constraint: sub-100ms real-time at very high volume is incompatible with frontier inference economics. Consider a hybrid where distilled or SLM handles first-pass and the frontier handles escalated complex cases only.';
+      return 'Justified. High consequence of wrong outputs, high complexity, adequate cost tolerance, and governance capacity represent the frontier model\'s operating condition. Do not compromise on capability where the consequences of wrong outputs are significant.';
+    },
+    alerts(v, w) {
+      const [s,cx,lt,vol,res,data,cost,ml,mr] = v; const a = [];
+      if(w===0&&s>=4) a.push({t:'warn',h:'Capability ceiling',b:'High-sensitivity workflows will expose SLM reasoning limits on exactly the queries that matter most. Consider distilled frontier.'});
+      if(w===0&&data<=1) a.push({t:'danger',h:'Practical blocker',b:'No training data means no SLM. Score reflects theoretical fit — this option is not available in practice without a curated corpus.'});
+      if(w===2&&lt<=1&&vol>=4) a.push({t:'danger',h:'Hard constraint conflict',b:'Real-time sub-second at very high volume is incompatible with frontier model economics and inference speed. Hybrid architecture required.'});
+      if(w===2&&mr<=2&&s>=4) a.push({t:'warn',h:'Governance gap',b:'High-sensitivity frontier deployment without model risk capacity creates unmanaged validation risk. Build governance infrastructure in parallel.'});
+      return a;
+    },
+    uses: [['Balance enquiry','Intent routing','FAQ deflection'],['Contact centre','Onboarding','Dispute triage'],['Credit decisioning','Distress calls','Regulatory synthesis']]
+  },
+
+  k: {
+    sections: [
+      {
+        title: 'Task dimensions — coding-specific',
+        qs: [
+          { id:'k1', num:'01', label:'How close to production are the systems this code touches?', lo:'Low: docs, scripts, boilerplate', hi:'High: payment, auth, core banking APIs', weight:'High', wc:'wh',
+            dnote: 'Blast radius matters. A wrong answer in chat affects one conversation. Insecure code in a payment flow affects every transaction it touches until the vulnerability is discovered.' },
+          { id:'k2', num:'02', label:'How complex is the code being generated?', lo:'Standalone: isolated function, clear spec', hi:'Complex: modifies code with many callers', weight:'High', wc:'wh',
+            dnote: 'Modifying a function called by 40 other functions, with side effects propagating through systems the model only partially understands, is categorically different from a standalone function.' },
+          { id:'k3', num:'03', label:'How critical is response speed to the developer workflow?', lo:'Instant: inline autocomplete, keystroke-level', hi:'Deliberate: quality matters, latency irrelevant', weight:'Low', wc:'wl',
+            dnote: 'Unlike consumer AI, coding AI latency is rarely the binding constraint. Developers wait for quality. The exception is inline autocomplete, which requires a sub-second response.' }
+        ]
+      },
+      {
+        title: 'Deployment & data dimensions — coding-specific',
+        qs: [
+          { id:'k4', num:'04', label:'How sensitive is the bank\'s codebase as IP?', lo:'Standard: private cloud VPC acceptable', hi:'Core IP: zero external exposure, air-gapped only', weight:'High', wc:'wh',
+            dnote: 'The proprietary codebase, including fraud algorithms, pricing models, and core banking logic, is a competitive asset as well as a compliance concern. IP protection requirements may be stricter than data protection.' },
+          { id:'k5', num:'05', label:'How large is the developer population using this tool?', lo:'Small specialist team', hi:'Large developer population: cost per inference matters', weight:'Mid', wc:'wm',
+            dnote: 'A developer\'s time is expensive. At small scale, productivity gain from a better model outweighs cost difference. At large scale, per-inference cost becomes material.' },
+          { id:'k6', num:'06', label:'How curated and security-reviewed is the training codebase?', lo:'Uncurated: legacy patterns, security debt present', hi:'Fully curated: security-reviewed, deprecated patterns removed', weight:'High', wc:'wh',
+            dnote: 'An SLM learns patterns from the codebase, good and bad alike. Legacy insecure patterns get learned alongside correct ones. Curation is a prerequisite, not an option.' }
+        ]
+      },
+      {
+        title: 'Bank capacity dimensions — coding-specific',
+        qs: [
+          { id:'k7', num:'07', label:'How does the bank value developer productivity vs inference cost?', lo:'Cost-first: per-inference economics dominate', hi:'Productivity-first: developer time justifies higher model cost', weight:'Mid', wc:'wm',
+            dnote: 'Coding AI cost is evaluated on developer productivity economics, not per-transaction economics. A 30% productivity gain may justify a 5x higher inference cost at small developer scale.' },
+          { id:'k8', num:'08', label:'Does the bank have ML capacity AND codebase curation capability?', lo:'Neither: no ML team, uncurated codebase', hi:'Both: dedicated ML team and security-reviewed codebase', weight:'High', wc:'wh',
+            dnote: 'Building a coding SLM requires both ML engineering for the fine-tuning pipeline and security engineering for curation of training data. Missing either makes the SLM unsafe or unbuildable.' },
+          { id:'k9', num:'09', label:'How mature is the bank\'s AI code security governance?', lo:'Standard SAST only: no AI-specific controls', hi:'SAST plus AI red team plus code lineage tracking in place', weight:'High', wc:'wh',
+            dnote: 'Existing security audits validated human developer behaviour, not model behaviour. AI-generated code requires additional controls including AI-specific red teaming, code lineage tracking, and review capacity that scales with generation volume.' }
+        ]
+      }
+    ],
+    score(v) {
+      const [prox,cplx,lat,ip,vol,data,prod,ml,sec] = v;
+      return [
+        norm((6-prox)*13+(6-cplx)*11+(6-lat)*3+ip*5+vol*6+data*13+(6-prod)*5+ml*12+(6-sec)*3, 245),
+        norm((prox<=3?prox*9:prox*6)+(cplx<=3?cplx*8:cplx*6)+lat*5+ip*4+(6-vol)*5+vol*3+(6-data)*8+data*3+prod*6+(6-prod)*4+(6-ml)*8+(6-sec)*5+sec*3, 255),
+        norm(prox*16+cplx*13+(6-lat)*3+(6-ip)*4+ip*2+(6-vol)*7+(6-data)*8+prod*8+(6-ml)*3+sec*9, 275)
+      ];
+    },
+    dimScores(v, ti) {
+      const [prox,cplx,lat,ip,vol,data,prod,ml,sec] = v;
+      const dims = [
+        ['System proximity', ti===0?(6-prox)*2.6:ti===1?prox<=3?prox*1.8:prox*1.2:prox*3.2],
+        ['Code complexity', ti===0?(6-cplx)*2.2:ti===1?cplx<=3?cplx*1.6:cplx*1.2:cplx*2.6],
+        ['Latency fit', ti===0?(6-lat)*0.6:ti===1?lat*1:lat*0.6],
+        ['IP residency', ti===0?ip*1:ti===1?ip*0.8:(6-ip)*0.8+ip*0.4],
+        ['Developer volume', ti===0?vol*1.2:ti===1?(6-vol)*1+vol*0.6:(6-vol)*1.4],
+        ['Training data quality', ti===0?data*2.6:ti===1?(6-data)*1.6+data*0.6:(6-data)*1.6],
+        ['Productivity fit', ti===0?(6-prod)*1:ti===1?prod*1.2+(6-prod)*0.8:prod*1.6],
+        ['ML+curation capacity', ti===0?ml*2.4:ti===1?(6-ml)*1.6:(6-ml)*0.6],
+        ['Security gov. fit', ti===0?(6-sec)*0.6:ti===1?sec*0.6+(6-sec)*1:sec*1.8]
+      ];
+      return dims.map(([n,v]) => [n, Math.round(Math.min(Math.max(v,0),20))]);
+    },
+    rat(v, w) {
+      const [prox,cplx,lat,ip,vol,data,prod,ml,sec] = v;
+      if(w===0){
+        if(data<=2) return 'Training data quality is the critical blocker. A coding SLM trained on uncurated legacy code will reproduce security debt and deprecated patterns. The codebase must be security-reviewed before it becomes training data.';
+        if(ml<=2) return 'ML and codebase curation capacity is too low. Building a coding SLM requires both ML engineering and security engineering capability. Without both, the SLM is either unbuildable or unsafe.';
+        if(prox>=4) return 'System proximity is too high for a purpose-built SLM. Existing security audits validated human developer behaviour, not model behaviour. Distilled frontier is the minimum for code that touches production systems.';
+        if(lat<=2) return 'Inline autocomplete at keystroke speed is the SLM\'s strongest coding case, a genuine latency requirement no larger model can match. Valid for low-proximity completion tasks with a curated, security-reviewed codebase.';
+        return 'Low-proximity code tasks with a well-curated codebase and ML capacity to maintain the retraining cycle as the codebase evolves. Cost advantage is real here.';
+      }
+      if(w===1){
+        if(ml<=2&&data<=2) return 'The safe default when the bank has neither curation capacity nor ML engineering. Security-aware training inherited from the frontier model — no bank-side curation required. Provider manages updates as new vulnerability classes emerge.';
+        if(prox>=4&&sec>=4) return 'Viable at high system proximity when the bank has strong security governance in place. Distilled model\'s security-aware training handles most cases. Rigorous review controls handle the rest.';
+        return 'Strong default for most banking code generation. Security disposition from frontier distillation meaningfully better than a bank-trained SLM. Cost well below full frontier. Right choice for the majority of development use cases.';
+      }
+      if(prox<=2&&cplx<=2) return 'Frontier model is overkill for low-proximity, low-complexity code tasks. Route to distilled frontier and reserve frontier capability for where it genuinely earns its place.';
+      if(lat<=1) return 'Inline autocomplete at keystroke speed is not compatible with frontier model inference latency. For this interaction pattern, use a smaller model for completions and reserve the frontier model for deliberate generation.';
+      return 'High system proximity and code complexity justify frontier model capability. Code touching payment, authentication, or core banking systems demands the deepest security reasoning available. Don\'t compromise here.';
+    },
+    alerts(v, w) {
+      const [prox,cplx,lat,ip,vol,data,prod,ml,sec] = v; const a = [];
+      if(w===0&&prox>=4) a.push({t:'danger',h:'System proximity too high for SLM',b:'Existing security audits validated human developer behaviour — not model behaviour. Distilled frontier is the minimum viable choice at this system proximity.'});
+      if(w===0&&data<=1) a.push({t:'danger',h:'Training data unsafe',b:'An uncurated codebase teaches the SLM insecure patterns. This option is not safely available until the codebase is security-reviewed and curated.'});
+      if(w===2&&lat<=1) a.push({t:'warn',h:'Inline autocomplete constraint',b:'Frontier model cannot serve keystroke-level completions reliably. Use distilled/SLM for inline completion, frontier for deliberate generation tasks.'});
+      if(w===2&&sec<=2) a.push({t:'warn',h:'Security governance required',b:'Frontier model at this system proximity without SAST + AI red team + code lineage tracking is not governable. Build controls before deployment.'});
+      return a;
+    },
+    uses: [['Boilerplate','Config files','Docs','Test stubs'],['API integrations','Internal tooling','Code review','Test generation'],['Payment logic','Auth systems','Fraud detection','Core banking APIs']]
+  }
+};
+
+const TN = ['Purpose-built SLM','Distilled frontier','Frontier model'];
+const TC = ['cg','ca','cp'];
+const TB = ['bg','ba','bp'];
+const secLabels = [['Task dimensions','Task'],['Deployment & data','Deploy'],['Bank capacity','Capacity']];
+
+function norm(s,m){ return Math.min(Math.round(s*100/m),100); }
+function cfg(){ return D[dom]; }
+function getv(id){ const el=document.getElementById(id); return el?parseInt(el.value):3; }
+function getAllVals(){ return cfg().sections.flatMap(s=>s.qs.map(q=>getv(q.id))); }
+
+function detectHybrid(v, sc, domain) {
+  if (domain === 'c') {
+    const [s,cx,lt,vol,res,data,cost,ml,mr] = v;
+    const spread = Math.max(...sc) - Math.min(...sc);
+    if (cx >= 4 && vol >= 4 && lt <= 2) return true;
+    if (s >= 4 && lt <= 2 && vol >= 3) return true;
+    if (cx >= 4 && s >= 3 && spread < 25) return true;
+    if (lt <= 2 && cx >= 4) return true;
+  } else {
+    const [prox,cplx,lat,ip,vol,data,prod,ml,sec] = v;
+    const spread = Math.max(...sc) - Math.min(...sc);
+    if (prox >= 4 && lat <= 2) return true;
+    if (cplx >= 4 && vol >= 4) return true;
+    if (prox >= 3 && cplx >= 4 && spread < 25) return true;
+    if (lat <= 2 && cplx >= 3 && prox >= 3) return true;
+  }
+  return false;
+}
+
+function hybridPipeline(v, domain) {
+  if (domain === 'c') {
+    const [s,cx,lt,vol] = v;
+    const stages = [];
+    if (vol >= 3 || lt <= 2) stages.push({ step:'Stage 1', tier:'Purpose-built SLM', cls:'ps-tier-g', what:'Intent classification, simple routing, deterministic retrievals. Fast, high-volume, low-cost.' });
+    stages.push({ step:'Stage 2', tier:'Distilled frontier', cls:'ps-tier-a', what:'Substantive conversation, policy-grounded responses, moderate complexity queries.' });
+    if (s >= 4 || cx >= 4) stages.push({ step:'Stage 3', tier:'Frontier model', cls:'ps-tier-p', what:'Complex escalations, regulatory decisions, distress conversations. Human handoff gate before any commitment.' });
+    return stages;
+  } else {
+    const [prox,cplx,lat] = v;
+    const stages = [];
+    if (lat <= 2) stages.push({ step:'Stage 1', tier:'Purpose-built SLM', cls:'ps-tier-g', what:'Inline autocomplete at keystroke speed. Low-proximity code completions only.' });
+    stages.push({ step:'Stage 2', tier:'Distilled frontier', cls:'ps-tier-a', what:'Deliberate code generation for standard development tasks, API integrations, test generation.' });
+    if (prox >= 4 || cplx >= 4) stages.push({ step:'Stage 3', tier:'Frontier model', cls:'ps-tier-p', what:'Security-critical and high-proximity code. Mandatory human review before promotion to production.' });
+    return stages;
+  }
+}
+
+function renderProg(){
+  document.getElementById('prog').innerHTML = cfg().sections.map((s,i)=>{
+    const cls = i<step?'done':i===step?'active':'';
+    return `
+      <div class="prog-step" onclick="goStep(${i})">
+        <div class="prog-dot ${cls}">${i<step?'✓':i+1}</div>
+        <div class="prog-label ${i===step?'active':''}">${secLabels[i][1]}</div>
+      </div>
+      ${i<2?'<div class="prog-line"></div>':''}
+    `;
+  }).join('') + (step===3?`<div class="prog-line"></div><div class="prog-step"><div class="prog-dot active">→</div><div class="prog-label active">Result</div></div>`:'');
+}
+
+function renderPanels(){
+  const c = cfg();
+  let html = '';
+  c.sections.forEach((sec,si)=>{
+    const active = si===step?'active':'';
+    html += `<div class="section-panel ${active}" id="panel-${si}">
+      <div class="section-title">${sec.title}</div>
+      <div class="qs">`;
+    sec.qs.forEach((q,qi)=>{
+      const val = getv(q.id)||3;
+      html += `
+        <div class="qcard">
+          <div class="qnum">Dimension ${si*3+qi+1} of 9</div>
+          <div class="qtop">
+            <div class="qlabel">${q.label}</div>
+            <div class="qval ca" id="qv-${q.id}">${val}</div>
+          </div>
+          <span class="weight-tag ${q.wc}">Weight: ${q.weight}</span>
+          <input type="range" min="1" max="5" step="1" value="${val}" id="${q.id}" oninput="onSlide('${q.id}',this.value)">
+          <div class="qscale">
+            <span class="qlo">${q.lo}</span>
+            <span class="qhi">${q.hi}</span>
+          </div>
+          <div class="qdomain-note">${q.dnote}</div>
+        </div>`;
+    });
+    html += `</div>
+      <div class="nav-row">
+        <button class="nav-btn" onclick="goStep(${si-1})" ${si===0?'disabled':''}>← Back</button>
+        <span class="nav-info">Section ${si+1} of 3</span>
+        <button class="nav-btn primary" onclick="goStep(${si+1})">${si<2?'Next →':'See result →'}</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('panels').innerHTML = html;
+}
+
+function onSlide(id, v){
+  const el = document.getElementById('qv-'+id);
+  if(el) el.textContent = v;
+}
+
+function goStep(s){
+  if(s<0||s>3) return;
+  step = s;
+  renderProg();
+  document.querySelectorAll('.section-panel').forEach((p,i)=>p.classList.toggle('active',i===step));
+  if(step===3){ renderResult(); document.getElementById('result-area').scrollIntoView({behavior:'smooth'}); }
+  else { document.getElementById('result-area').innerHTML=''; }
+}
+
+function goStep(s){
+  if(s<0) return;
+  step = s;
+  renderProg();
+  document.querySelectorAll('.section-panel').forEach((p,i)=>p.classList.toggle('active',i===step&&step<3));
+  if(step===3){ renderResult(); }
+  else { document.getElementById('result-area').innerHTML=''; }
+}
+
+function renderResult(){
+  const c = cfg();
+  const v = getAllVals();
+  const sc = c.score(v);
+  const w = sc.indexOf(Math.max(...sc));
+  const isHybrid = detectHybrid(v, sc, dom);
+  const rat = c.rat(v, isHybrid ? 1 : w);
+  const alerts = c.alerts(v, isHybrid ? 1 : w);
+
+  const chips = c.sections.flatMap((s,si)=>s.qs.map((q,qi)=>{
+    const val = getv(q.id);
+    const label = val<=2?'Low':val<=3?'Mid':'High';
+    return `<span class="chip">${si*3+qi+1}. ${label}</span>`;
+  }));
+
+  let resultHtml = '';
+
+  if (isHybrid) {
+    const stages = hybridPipeline(v, dom);
+    const stageHtml = stages.map((s,i) => `
+      ${i>0?'<div class="ps-arrow">&#8594;</div>':''}
+      <div class="pipeline-stage">
+        <div class="ps-step">${s.step}</div>
+        <div class="ps-tier ${s.cls}">${s.tier}</div>
+        <div class="ps-what">${s.what}</div>
+      </div>`).join('');
+
+    const hybridRat = dom === 'c'
+      ? 'This use case spans multiple complexity and volume levels within a single workflow. A single model tier creates a trade-off: a cheaper model handles volume but fails on complex queries, while the frontier model is unnecessarily expensive for routine interactions. A routed pipeline is the right architecture. Each stage handles what it is best suited for, connected by a routing layer that escalates based on query complexity, sensitivity signals, and customer context.'
+      : 'This coding workflow spans tasks of genuinely different risk levels. A single model tier either under-governs high-proximity security-critical code or over-engineers low-risk generation tasks. A pipeline architecture routes each generation task to the appropriate tier based on system proximity and code complexity, keeping costs efficient for routine work while applying the right level of security reasoning where it matters.';
+
+    resultHtml = `
+      <div class="result-card">
+        <div class="rhead rh-t">
+          <div class="reyebrow ct">${dom==='c'?'Customer-facing AI':'Code generation AI'} · Recommendation</div>
+          <div class="rverdict ct">Hybrid pipeline</div>
+          <div class="rsub ct">Multiple model tiers working in sequence</div>
+        </div>
+        <div class="tgrid">
+          ${sc.map((s,i)=>`
+            <div class="tc">
+              <div class="tname">${TN[i]}</div>
+              <div class="tscore ${TC[i]}">${s}</div>
+              <div class="tbarwrap"><div class="tbar ${TB[i]}" style="width:${s}%"></div></div>
+              <div class="tuses">${c.uses[i].join(' · ')}</div>
+            </div>`).join('')}
+        </div>
+        <div class="pipeline-stages">
+          <div class="pipeline-label">Recommended pipeline architecture</div>
+          <div class="pipeline-row">${stageHtml}</div>
+        </div>
+        <div class="rat">
+          <div class="ratlabel">Why a hybrid pipeline</div>
+          <div class="rattext">${hybridRat}</div>
+        </div>
+        ${alerts.map(a=>`<div class="alrt ${a.t}"><div class="alrth">${a.h}</div>${a.b}</div>`).join('')}
+      </div>`;
+  } else {
+    const rhCls = ['rh-g','rh-a','rh-p'][w];
+    const badgeCls = ['wbadge-g','wbadge-a','wbadge-p'][w];
+    const bestCls = ['best-g','best-a','best-p'];
+
+    const tg = sc.map((s,i)=>`
+      <div class="tc${i===w?' '+bestCls[i]:''}">
+        ${i===w?`<div class="wbadge ${badgeCls}">Recommended</div>`:''}
+        <div class="tname">${TN[i]}</div>
+        <div class="tscore ${TC[i]}">${s}</div>
+        <div class="tbarwrap"><div class="tbar ${TB[i]}" style="width:${s}%"></div></div>
+        <div class="tuses">${c.uses[i].join(' · ')}</div>
+      </div>`).join('');
+
+    const bkRows = c.dimScores(v,w).map(([n,dv])=>`
+      <div class="bk-row">
+        <div class="bk-dim">${n}</div>
+        <div class="bk-bar-wrap"><div class="bk-bar ${TB[w]}" style="width:${Math.min(dv*5,100)}%"></div></div>
+        <div class="bk-num">${dv}</div>
+      </div>`).join('');
+
+    resultHtml = `
+      <div class="result-card">
+        <div class="rhead ${rhCls}">
+          <div class="reyebrow ${TC[w]}">${dom==='c'?'Customer-facing AI':'Code generation AI'} · Recommendation</div>
+          <div class="rverdict ${TC[w]}">${TN[w]}</div>
+          <div class="rsub ${TC[w]}">${c.uses[w].join(' · ')}</div>
+        </div>
+        <div class="tgrid">${tg}</div>
+        <div class="breakdown">
+          <button class="bk-toggle" onclick="toggleBk(this)">
+            <span>Score breakdown by dimension</span>
+            <span id="bkarrow">▸</span>
+          </button>
+          <div class="bk-body" id="bkbody">${bkRows}</div>
+        </div>
+        <div class="rat">
+          <div class="ratlabel">Why this recommendation</div>
+          <div class="rattext">${rat}</div>
+        </div>
+        ${alerts.map(a=>`<div class="alrt ${a.t}"><div class="alrth">${a.h}</div>${a.b}</div>`).join('')}
+      </div>`;
+  }
+
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-wrap">
+      <div class="summary-chips">${chips.join('')}</div>
+      ${resultHtml}
+      <button class="restart-btn" onclick="restart()">Start over with different inputs</button>
+    </div>`;
+}
+
+function toggleBk(btn){
+  const body = document.getElementById('bkbody');
+  const arrow = document.getElementById('bkarrow');
+  bkOpen = !bkOpen;
+  body.classList.toggle('open', bkOpen);
+  arrow.textContent = bkOpen ? '▾' : '▸';
+}
+
+function restart(){
+  step=0;
+  document.getElementById('result-area').innerHTML='';
+  renderProg();
+  renderPanels();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setD(d, btn){
+  dom=d; step=0;
+  Object.keys(vals).forEach(k=>delete vals[k]);
+  document.querySelectorAll('.dt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('result-area').innerHTML='';
+  renderProg();
+  renderPanels();
+}
+
+renderProg();
+renderPanels();
+renderPT();
+
+// Document analyser
+let daFile = null, daDomain = 'c', daFileContent = null, daFileType = null;
+
+function setDaDomain(d, btn) {
+  daDomain = d;
+  document.querySelectorAll('.da-dt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  daFile = file;
+  const nameEl = document.getElementById('da-filename');
+  nameEl.textContent = '📄 ' + file.name;
+  nameEl.style.display = 'block';
+  document.getElementById('da-run-btn').disabled = false;
+
+  const reader = new FileReader();
+  if (file.type === 'application/pdf') {
+    reader.readAsDataURL(file);
+    reader.onload = e => {
+      daFileContent = e.target.result.split(',')[1];
+      daFileType = 'pdf';
+    };
+  } else {
+    reader.readAsText(file);
+    reader.onload = e => {
+      daFileContent = e.target.result;
+      daFileType = 'text';
+    };
+  }
+}
+
+const TIER_STYLE = {
+  'SLM': { head: 'sh-g', label: 'Purpose-built SLM' },
+  'Distilled frontier': { head: 'sh-a', label: 'Distilled frontier' },
+  'Frontier': { head: 'sh-p', label: 'Frontier model' },
+  'Hybrid': { head: 'sh-t', label: 'Hybrid pipeline' }
+};
+
+async function runAnalysis() {
+  if (!daFileContent) { alert('Please wait for the file to finish loading.'); return; }
+
+  const statusEl = document.getElementById('da-status');
+  const resultEl = document.getElementById('da-result');
+  const btn = document.getElementById('da-run-btn');
+
+  btn.disabled = true;
+  resultEl.style.display = 'none';
+  resultEl.innerHTML = '';
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Reading document and decomposing workflow stages...';
+
+  // Read intake form
+  const vol = document.getElementById('intake-volume').value;
+  const ml = document.getElementById('intake-ml').value;
+  const gov = document.getElementById('intake-gov').value;
+  const dat = document.getElementById('intake-data').value;
+  const volumeMap = { low:'Low (hundreds per day)', medium:'Medium (thousands per day)', high:'High (hundreds of thousands per month)', very_high:'Very high (millions per month)' };
+  const mlMap = { none:'No ML engineering team in the bank', small:'Small team of 2-5 ML engineers', dedicated:'Dedicated ML function with 10+ engineers' };
+  const govMap = { early:'Early stage — no formal model risk framework yet', developing:'Developing — framework in progress, limited validation bandwidth', established:'Established — regular validation cadence, Tier 1 capability available' };
+  const dataMap = { none:'No labelled historical data available', partial:'Partial — some data exists but unstructured or uncurated', yes:'Labelled and curated historical data available' };
+  const intakeLines = [
+    vol ? `Process volume: ${volumeMap[vol]}` : null,
+    ml  ? `Bank ML engineering capacity: ${mlMap[ml]}` : null,
+    gov ? `Model risk governance maturity: ${govMap[gov]}` : null,
+    dat ? `Training data availability: ${dataMap[dat]}` : null,
+  ].filter(Boolean);
+
+  const intakeNote = intakeLines.length > 0
+    ? `\n\nOrganisational context provided by the user — use this to score dimensions the document cannot tell you (volume, ML capacity, governance, training data). Where the document gives explicit information, prefer the document.\n\n${intakeLines.join('\n')}`
+    : `\n\nNo organisational context was provided. For dimensions the document does not address (volume, ML capacity, governance, training data), assign a mid-range score of 3 and note in the rationale that this dimension could not be assessed from the document alone.`;
+
+  const domainNote = daDomain === 'c'
+    ? 'This is a customer-facing AI use case. Sensitivity, task complexity, and latency are primary dimensions.'
+    : daDomain === 'k'
+    ? 'This is a code generation AI use case. System proximity, code complexity, and security governance are primary dimensions.'
+    : 'This document covers both customer-facing and code generation AI. Apply the appropriate dimension set to each stage.';
+
+  const systemPrompt = `You are an expert AI deployment advisor for banks. You analyse banking process documents — functional specifications, process flows, workflow descriptions — decompose them into discrete stages, and apply a nine-dimension model selection framework to each stage.
+
+Real bank documents rarely state volume, latency, or sensitivity explicitly. Infer these from the process description. A step labelled "validate customer identity before proceeding" implies high sensitivity and data residency constraints. A step labelled "retrieve account balance and present to customer" implies high volume and low complexity. State your inferences explicitly in the rationale.
+
+The four possible verdicts are:
+- SLM: Purpose-built SLM. Narrow, high-volume, deterministic, low-sensitivity tasks with sufficient training data and ML capacity.
+- Distilled frontier: Moderate complexity or variable scope, or where the bank lacks ML engineering capacity. The practical default for most banking tasks.
+- Frontier: High-sensitivity, high-complexity tasks where the stakes of a wrong output are significant.
+- Hybrid: A pipeline of tiers within a single workflow — different stages call different model tiers in sequence.
+
+The nine dimensions (score 1-5):
+1. Sensitivity / System proximity
+2. Task complexity / Code complexity
+3. Latency requirement
+4. Volume
+5. Data residency
+6. Training data quality
+7. Cost tolerance / Productivity economics
+8. ML capacity
+9. Governance maturity
+${intakeNote}
+
+Respond ONLY with a valid JSON object. No preamble, no markdown fences.
+
+{
+  "documentSummary": "One sentence on what process this document describes",
+  "overallContext": "Two to three sentences on AI deployment context and cross-cutting constraints. Note which dimensions were inferred vs stated.",
+  "stages": [
+    {
+      "stageName": "Stage name",
+      "stageDescription": "What this stage does, drawn from the document",
+      "verdict": "SLM|Distilled frontier|Frontier|Hybrid",
+      "dimensions": { "sensitivity":3,"complexity":2,"latency":4,"volume":5,"residency":3,"trainingData":3,"cost":2,"mlCapacity":3,"governance":2 },
+      "rationale": "Two to three sentences explaining the recommendation, explicitly noting inferred vs stated scores",
+      "keyRisk": "Primary governance or operational risk for this stage"
+    }
+  ]
+}`;
+
+  const prompt = `Decompose this banking process document into its key AI workflow stages. ${domainNote} Apply the nine-dimension framework to each stage. Be specific to what is in the document — do not invent stages not present.`;
+
+  const userContent = daFileType === 'pdf'
+    ? [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: daFileContent } },
+        { type: 'text', text: prompt }
+      ]
+    : [{ type: 'text', text: `Document content:\n\n${daFileContent}\n\n${prompt}` }];
+
+  try {
+    statusEl.textContent = 'Applying the nine-dimension framework to each stage...';
+    const response = await fetch('/.netlify/functions/claude-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content[0].text.trim().replace(/^```json|```$/g, '').trim();
+    const result = JSON.parse(raw);
+    statusEl.style.display = 'none';
+    renderDAResult(result);
+    btn.disabled = false;
+  } catch (err) {
+    statusEl.style.display = 'none';
+    resultEl.innerHTML = `<div class="da-error"><strong>Analysis failed:</strong> ${err.message}. Please check your document and try again.</div>`;
+    resultEl.style.display = 'block';
+    btn.disabled = false;
+  }
+}
+
+function renderDAResult(result) {
+  const resultEl = document.getElementById('da-result');
+
+  const dimNames = ['Sensitivity','Complexity','Latency','Volume','Residency','Training data','Cost','ML capacity','Governance'];
+  const dimKeys = ['sensitivity','complexity','latency','volume','residency','trainingData','cost','mlCapacity','governance'];
+
+  const stagesHtml = result.stages.map((stage, i) => {
+    const tierKey = stage.verdict.includes('SLM') ? 'SLM'
+      : stage.verdict.includes('Distilled') ? 'Distilled frontier'
+      : stage.verdict.includes('Hybrid') ? 'Hybrid'
+      : 'Frontier';
+    const style = TIER_STYLE[tierKey] || TIER_STYLE['Distilled frontier'];
+
+    const dimPills = dimNames.map((n,j) => {
+      const val = stage.dimensions[dimKeys[j]] || 3;
+      const lbl = val <= 2 ? 'Low' : val <= 3 ? 'Mid' : 'High';
+      return `<span class="da-dim-pill">${n}: ${lbl} (${val})</span>`;
+    }).join('');
+
+    return `
+      <div class="da-stage-card">
+        <div class="da-stage-head ${style.head}">
+          <div class="da-stage-num">${i+1}</div>
+          <div class="da-stage-meta">
+            <div class="da-stage-name">${stage.stageName}</div>
+            <div class="da-stage-verdict">${style.label}</div>
+          </div>
+        </div>
+        <div class="da-stage-body">
+          <div class="da-stage-dims">${dimPills}</div>
+          <div class="da-stage-why">${stage.rationale}</div>
+          ${stage.keyRisk ? `<div style="margin-top:8px;font-size:12px;color:var(--warn-text);font-weight:600;">Key risk: ${stage.keyRisk}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  resultEl.innerHTML = `
+    <div class="da-summary">
+      <div class="da-summary-label">Document summary</div>
+      <div class="da-summary-text">${result.documentSummary}</div>
+      ${result.overallContext ? `<div class="da-summary-text" style="margin-top:8px;opacity:0.85;">${result.overallContext}</div>` : ''}
+    </div>
+    ${stagesHtml}`;
+  resultEl.style.display = 'block';
+}
+</script>
+</body>
+</html>

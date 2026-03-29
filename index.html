@@ -1433,6 +1433,9 @@ Respond ONLY with a valid JSON object. No preamble, no markdown fences.
     });
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
+    if (!data.content || !data.content[0] || !data.content[0].text) {
+      throw new Error('Unexpected response format from API. Response: ' + JSON.stringify(data).slice(0, 200));
+    }
     const raw = data.content[0].text.trim().replace(/^```json|```$/g, '').trim();
     const result = JSON.parse(raw);
     statusEl.style.display = 'none';
